@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 
-from settings.settings import proxmox
+from settings.settings import proxmox, SSH_HOST_KEY, DEV
 from paramiko import SSHClient, WarningPolicy
 from paramiko import RSAKey, ECDSAKey
 from jinja2 import Environment, FileSystemLoader
@@ -8,8 +8,6 @@ import sys
 import logging
 import argparse
 
-SSH_HOST_KEY = 'ssh_host_rsa_key'
-DEV = '/dev/nbd0'
 
 configs = {}
 configs['hostname'] = 'hostname'
@@ -168,7 +166,7 @@ def raw_init(configs, src, dst, dev=DEV, part='1'):
            priv_key=True)
     logger.info('Config deployed')
     logger.info('Unmounting of %s to %s by %s' % (src, dst, dev))
-    # check_exit(*image_umount(proxmox_ssh, dev, src, dst))
+    check_exit(*image_umount(proxmox_ssh, dev, src, dst))
     logger.info('Image %s unmounted from %s by %s' % (src, dst, dev))
     logging.info('Closing connection to %s' % proxmox['host'])
     proxmox_ssh.close()

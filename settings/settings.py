@@ -1,3 +1,7 @@
+# general settings
+SSH_HOST_KEY = 'ssh_host_rsa_key'
+DEV = '/dev/nbd0'
+
 # proxmox settings
 proxmox = {}
 
