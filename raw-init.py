@@ -7,6 +7,7 @@ from jinja2 import Environment, FileSystemLoader
 import sys
 import logging
 import argparse
+import coloredlogs
 
 
 configs = {}
@@ -31,6 +32,7 @@ logger = logging.getLogger(__file__)
 def log_init():
     FORMAT = '%(asctime)s %(levelname)s %(module)s %(message)s'
     logging.basicConfig(format=FORMAT, level=logging.INFO)
+    coloredlogs.install(level='INFO')
 
 
 def template_compile(configs):
@@ -46,7 +48,7 @@ def template_compile(configs):
 
 
 def get_proxmox_ssh(proxmox):
-    logging.info('opening connection to %s' % proxmox['host'])
+    logger.info('opening connection to %s' % proxmox['host'])
     proxmox_ssh = SSHClient()
     proxmox_ssh.set_missing_host_key_policy(WarningPolicy())
     proxmox_ssh.connect(proxmox['ssh_host'],
@@ -100,7 +102,7 @@ def image_umount(ssh, dev, src, dst):
 
 
 def deploy(ssh, src, dst, priv_key=False, pub_key=False):
-    logging.info('deploy %s to %s' % (src, dst))
+    logger.info('deploy %s to %s' % (src, dst))
     try:
         proxmox_sftp = ssh.open_sftp()
     except Exception, ex:
@@ -118,7 +120,7 @@ def deploy(ssh, src, dst, priv_key=False, pub_key=False):
         logger.error('SFTP exception: ' + str(ex))
 
     proxmox_sftp.close()
-    logging.info('verify the deployed file')
+    logger.info('verify the deployed file')
     command = 'sudo ls -l %s' % (dst)
     check_exit(*remote_command(ssh, command), block=False)
 
@@ -172,9 +174,9 @@ def raw_init(configs, src, dst, dev=DEV, part='1'):
     logger.info('Unmounting of %s to %s by %s' % (src, dst, dev))
     check_exit(*image_umount(proxmox_ssh, dev, src, dst))
     logger.info('Image %s unmounted from %s by %s' % (src, dst, dev))
-    logging.info('Closing connection to %s' % proxmox['host'])
+    logger.info('Closing connection to %s' % proxmox['host'])
     proxmox_ssh.close()
-    logging.info('Connection to %s closed' % proxmox['host'])
+    logger.info('Connection to %s closed' % proxmox['host'])
 
 
 if __name__ == '__main__':
