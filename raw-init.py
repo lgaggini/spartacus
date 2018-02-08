@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 
-from settings.settings import proxmox, SSH_HOST_KEY, DEV
+from settings.settings import proxmox, SSH_HOST_KEY, DEV, TMP_DIR, STATIC_DIR
 from paramiko import SSHClient, WarningPolicy
 from paramiko import RSAKey, ECDSAKey
 from jinja2 import Environment, FileSystemLoader
@@ -41,7 +41,7 @@ def template_compile(configs):
 
     for config_key in config_keys:
         j2_template = env.get_template('%s.j2' % config_key)
-        with open(config_key, 'w') as config_file:
+        with open('%s/%s' % (TMP_DIR, config_key), 'w') as config_file:
             config_file.write(j2_template.render(var=configs[config_key]))
 
 
@@ -147,23 +147,27 @@ def raw_init(configs, src, dst, dev=DEV, part='1'):
     check_exit(*image_mount(proxmox_ssh, dev, src, dst, part))
     logger.info('Image %s mounted to %s by %sp%s' % (src, dst, dev, part))
     logger.info('Deploy configurations')
-    deploy(proxmox_ssh, 'interfaces', '%s/etc/network/interfaces' % dst)
-    deploy(proxmox_ssh, 'hostname', '%s/etc/hostname' % dst)
-    deploy(proxmox_ssh, 'serverfarm', '%s/etc/serverfarm' % dst)
-    deploy(proxmox_ssh, 'pupuppetenvironment', '%s/etc/pupuppetenvironment'
+    deploy(proxmox_ssh, '%s/interfaces' % TMP_DIR, '%s/etc/network/interfaces'
            % dst)
-    deploy(proxmox_ssh, 'hosts', '%s/etc/hosts' % dst)
-    deploy(proxmox_ssh, 'puppet.conf', '%s/etc/puppet/puppet.conf' % dst)
+    deploy(proxmox_ssh, '%s/hostname' % TMP_DIR, '%s/etc/hostname' % dst)
+    deploy(proxmox_ssh, '%s/serverfarm' % TMP_DIR, '%s/etc/serverfarm' % dst)
+    deploy(proxmox_ssh, '%s/pupuppetenvironment' % TMP_DIR,
+           '%s/etc/pupuppetenvironment' % dst)
+    deploy(proxmox_ssh, '%s/hosts' % TMP_DIR, '%s/etc/hosts' % dst)
+    deploy(proxmox_ssh, '%s/puppet.conf' % TMP_DIR,
+           '%s/etc/puppet/puppet.conf' % dst)
     logger.info('Generate and deploy tmp RSA 2048 bit host keys for \
                 first ssh access')
-    generate_ssh_hostkeys(SSH_HOST_KEY)
+    generate_ssh_hostkeys('%s/%s' % (TMP_DIR, SSH_HOST_KEY))
     logger.info('Generated tmp RSA 2048 bit host keys for first ssh access')
     priv = '%s' % SSH_HOST_KEY
     pub = '%s.pub' % SSH_HOST_KEY
-    deploy(proxmox_ssh, priv, '%s/etc/ssh/%s' % (dst, priv), priv_key=True)
-    deploy(proxmox_ssh, pub, '%s/etc/ssh/%s' % (dst, pub), pub_key=True)
-    deploy(proxmox_ssh, 'authorized_keys', '/root/.ssh/authorized_keys',
-           priv_key=True)
+    deploy(proxmox_ssh, '%s/%s' % (TMP_DIR, priv), '%s/etc/ssh/%s'
+           % (dst, priv), priv_key=True)
+    deploy(proxmox_ssh, '%s/%s' % (TMP_DIR, pub), '%s/etc/ssh/%s'
+           % (dst, pub), pub_key=True)
+    deploy(proxmox_ssh, '%s/authorized_keys' % STATIC_DIR,
+           '/root/.ssh/authorized_keys', priv_key=True)
     logger.info('Config deployed')
     logger.info('Unmounting of %s to %s by %s' % (src, dst, dev))
     check_exit(*image_umount(proxmox_ssh, dev, src, dst))
