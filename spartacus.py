@@ -1,10 +1,10 @@
-#!/usr/bin/python
+#! /usr/bin/env python
 # documentazione api proxmox:
 # https://pve.proxmox.com/pve-docs/api-viewer/index.html
 # documentazione pyproxmox:
 # https://github.com/Daemonthread/pyproxmox
 
-from pyproxmox import *
+import pyproxmox
 import time
 from optparse import OptionParser
 import sys
@@ -12,7 +12,7 @@ import random
 
 
 def print_data(msg):
-    print time.strftime("%H:%M:%S")+" "+msg
+    print (time.strftime("%H:%M:%S")+" "+msg)
 
 
 def randomMAC():
@@ -141,7 +141,7 @@ if __name__ == '__main__':
 
         # installa una macchina clonando il template
         install = [('newid',newid), ('name', name), ('full', 1),('format', 'raw'), ('storage', storage), ('target', target_node)]
-        print "installo la macchina %s (id %s) clonando il template %s (id %s su macchina %s) sul nodo %s utilizzando lo storage %s" % (name,newid,vm_name,vmid,node,target_node,storage)
+        print("installo la macchina %s (id %s) clonando il template %s (id %s su macchina %s) sul nodo %s utilizzando lo storage %s" % (name,newid,vm_name,vmid,node,target_node,storage))
         b.cloneVirtualMachine(node, vmid, install)
         print_data("inizio la clonazione")
 
@@ -171,5 +171,5 @@ if __name__ == '__main__':
         b.startVirtualMachine(target_node, newid)
         print_data("accendo la macchina")
     else:
-        print "impossibile trovare il template %s" % (vm_name)
+        print ("impossibile trovare il template %s" % (vm_name))
         sys.exit(2)
