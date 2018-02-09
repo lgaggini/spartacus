@@ -14,6 +14,8 @@ EVEN_VOL = 'pve04'
 VOL_THRES = 100000000000
 MAGIC_THRES = 40
 RAM_THRES = 8192
+DEFAULT_TEMPLATE = 'masterdebian9'
+DEFAULT_TEMPLATEID = '694'
 
 # proxmox settings
 proxmox = {}

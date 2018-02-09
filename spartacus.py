@@ -18,6 +18,7 @@ from settings.settings import AVAILABLE_VLANS, AVAILABLE_FARMS
 from settings.settings import RAM_SIZES, CORE_SIZES, SOCKET_SIZES
 from settings.settings import ODD_VOL, EVEN_VOL, VOL_THRES
 from settings.settings import MAGIC_THRES, RAM_THRES
+from settings.settings import DEFAULT_TEMPLATE, DEFAULT_TEMPLATEID
 import rawinit
 import yaml
 import re
@@ -152,9 +153,12 @@ if __name__ == '__main__':
     description = "spartacus, deploy vm on proxmox cluster"
     parser = argparse.ArgumentParser(description=description)
 
-    parser.add_argument('-t', '--template', default='masterdebian9',
+    parser.add_argument('-t', '--template', default=DEFAULT_TEMPLATE,
                         help='Name of template to clone \
-                        (default masterdebian9)')
+                        (default %s)' % DEFAULT_TEMPLATE)
+    parser.add_argument('--templateid', default=DEFAULT_TEMPLATEID,
+                        help='id of the template to clone \
+                        (default %s)' % DEFAULT_TEMPLATEID)
     parser.add_argument('-n', '--name', default=None,
                         help='Name of new virtual machines')
     parser.add_argument('-i', '--inventory', default=None,
@@ -189,7 +193,7 @@ if __name__ == '__main__':
 
     if cli_options.name is None and cli_options.inventory is None:
         parser.print_help()
-        logger.error('argument -n/--name or -i/--inventory are reuired')
+        logger.error('argument -n/--name or -i/--inventory are required')
         sys.exit('exiting')
 
     if cli_options.name is None and cli_options.inventory is not None:
@@ -218,9 +222,13 @@ if __name__ == '__main__':
     name = options['name']
     description = options['description']
     logger.info("cerco il template")
-    vmid, node = findTemplate(proxmox_api, vm_name)
-    logger.info("ho trovato il template %s on node %s, vmid %s"
-                % (options['template'], node, vmid,))
+    if options['templateid'] is None or\
+       options['template'] != DEFAULT_TEMPLATE:
+        vmid, node = findTemplate(proxmox_api, vm_name)
+    else:
+        vmid = options['templateid']
+    logger.info("ho trovato il template %s, vmid %s"
+                % (options['template'], vmid))
 
     if (vmid is not None):
         # prende il primo id disponibile
@@ -235,11 +243,11 @@ if __name__ == '__main__':
         # installa una macchina clonando il template
         install = [('newid', newid), ('name', name), ('full', 1),
                    ('format', 'raw'), ('storage', storage),
-        logger.info("installo la macchina %s (id %s) clonando il template %s\
                    ('target', target_node), ('description', description)]
-                    (id %s su macchina %s) sul nodo %s utilizzando lo storage\
-                    %s" % (name, newid, vm_name, vmid, node, target_node,
-                    storage))
+        logger.info('installo la macchina %s (id %s) clonando il template\
+                    %s (id %s) sul nodo %s utilizzando lo storage %s' %
+                    (name, newid, vm_name, vmid, target_node,
+                     storage))
         # proxmox_api.cloneVirtualMachine(node, vmid, install)
         logger.info("inizio la clonazione")
 
