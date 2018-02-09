@@ -40,24 +40,32 @@ def MACprettyprint(mac):
     return ':'.join(map(lambda x: "%02x" % x, mac))
 
 
-def getNFSVolume(connessione):
-    """prende il volume attivo pveXX con meno spazio utilizzato"""
-    space_stor = {}
-    storage = b.getNodeStorage('kvm')
+def getNFSVolume(connessione, name):
+    """prende il volume attivo pveXX in base all indice della
+    macchina e controlla lo spazio disponibile"""
+
+    volume = 'pve03'
+
+    m = re.search(r'\d+$', name)
+    if m is not None:
+        index = m.group()
+        if index % 2 == 0:
+            volume = 'pve04'
+
+    storage = connessione.getNodeStorage('kvm')
+    logger.debug(storage)
 
     for s in storage['data']:
         logger.debug(s['content'])
-        if s['active'] == 1 and s['content'].find("images") == 0 and \
-           s['storage'].find("pve") == 0:
-            stor = s['storage']
-            dati = b.getNodeStorageStatus('kvm', stor)['data']
-            logger.debug(dati)
-            if dati['avail'] > 100000000:
-                space_stor[stor] = dati['used']
+        if volume in s['storage']:
+            avail = s['avail']
+            logger.debug(avail)
+            if avail <= 100000000:
+                logger.error('Available space %s is under the minimum allowed (%s) on \
+                              %s' % (avail, 100000000, volume))
+                sys.exit('exiting')
 
-    for w in sorted(space_stor, key=space_stor.get, reverse=False):
-        return w
-    return None
+    return volume
 
 
 def findTemplate(connessione, vmname):
@@ -215,9 +223,9 @@ if __name__ == '__main__':
 
         logger.info("ho trovato il VmNextId")
         logger.info("ho trovato il nodo disponibile")
-        storage = getNFSVolume(b)
         logger.info("ho trovato lo storage")
         target_node = getAvailableNode(proxmox)
+        storage = getNFSVolume(proxmox, options['name'])
 
         # installa una macchina clonando il template
         install = [('newid', newid), ('name', name), ('full', 1),
