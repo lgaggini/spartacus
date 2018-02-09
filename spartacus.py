@@ -9,10 +9,16 @@ import time
 from optparse import OptionParser
 import sys
 import random
+import logging
+import coloredlogs
+
+logger = logging.getLogger(__file__)
 
 
-def print_data(msg):
-    print (time.strftime("%H:%M:%S")+" "+msg)
+def log_init():
+    FORMAT = '%(asctime)s %(levelname)s %(module)s %(message)s'
+    logging.basicConfig(format=FORMAT, level=logging.INFO)
+    coloredlogs.install(level='INFO')
 
 
 def randomMAC():
@@ -34,11 +40,12 @@ def getNFSVolume(connessione):
     storage = b.getNodeStorage('kvm')
 
     for s in storage['data']:
-        # print s['content']
-        if s['active'] == 1 and s['content'].find("images") == 0 and s['storage'].find("pve") == 0:
+        logger.debug(s['content'])
+        if s['active'] == 1 and s['content'].find("images") == 0 and \
+           s['storage'].find("pve") == 0:
             stor = s['storage']
             dati = b.getNodeStorageStatus('kvm', stor)['data']
-            # print dati
+            logger.debug(dati)
             if dati['avail'] > 100000000:
                 space_stor[stor] = dati['used']
 
@@ -80,7 +87,8 @@ def getAvailableNode(connessione):
         freeram = status['data']['memory']['free']/1048576
         percram = int(freeram * 100 / totram)
         magic = ncpu - (cpu1 + cpu5)/2 + int(percram)
-        # print "%s %s %s %s %s %s %s" % (n,cpu1,cpu5,totram, freeram,percram,magic)
+        logger.debug('%s %s %s %s %s %s %s' % (n, cpu1, cpu5, totram,
+                                               freeram, percram, magic))
         d[n] = magic
 
         for w in sorted(d, key=d.get, reverse=True):
@@ -115,7 +123,8 @@ if __name__ == '__main__':
 
     # argomenti obbligatori
     if (options.template is None or options.name is None):
-        print('Error: --action must be show or delete or search or status')
+        logger.error('Error: --action must be show or \
+                     delete or search or status')
         parser.print_help()
         sys.exit(1)
 
@@ -125,33 +134,38 @@ if __name__ == '__main__':
 
     vm_name = options.template
     name = options.name
-    print_data("cerco il template")
+    logger.info("cerco il template")
     vmid, node = findTemplate(b, vm_name)
-    print_data("ho trovato il template")
+    logger.info("ho trovato il template")
 
     if (vmid is not None):
         # prende il primo id disponibile
         newid = b.getClusterVmNextId()['data']
 
-        print_data("ho trovato il VmNextId")
+        logger.info("ho trovato il VmNextId")
         target_node = getAvailableNode(b)
-        print_data("ho trovato il nodo disponibile")
+        logger.info("ho trovato il nodo disponibile")
         storage = getNFSVolume(b)
-        print_data("ho trovato lo storage")
+        logger.info("ho trovato lo storage")
 
         # installa una macchina clonando il template
-        install = [('newid',newid), ('name', name), ('full', 1),('format', 'raw'), ('storage', storage), ('target', target_node)]
-        print("installo la macchina %s (id %s) clonando il template %s (id %s su macchina %s) sul nodo %s utilizzando lo storage %s" % (name,newid,vm_name,vmid,node,target_node,storage))
+        install = [('newid', newid), ('name', name), ('full', 1),
+                   ('format', 'raw'), ('storage', storage),
+                   ('target', target_node)]
+        logger.info("installo la macchina %s (id %s) clonando il template %s \
+                    (id %s su macchina %s) sul nodo %s utilizzando lo storage \
+                    %s" % (name, newid, vm_name, vmid, node, target_node,
+                    storage))
         b.cloneVirtualMachine(node, vmid, install)
-        print_data("inizio la clonazione")
+        logger.info("inizio la clonazione")
 
         while True:
             if b.getVirtualStatus(target_node, newid)['status']['ok'] is True:
                 break
-            # print "aspetto altri 5 secondi"
+            logger.info("aspetto altri 5 secondi")
             time.sleep(5)
 
-        print_data("finita la clonazione")
+        logger.info("finita la clonazione")
         # config = b.getVirtualConfig(target_node,newid)['data']['net0']
         mod_conf = []
         if (options.net0 is not None):
@@ -165,11 +179,12 @@ if __name__ == '__main__':
         mod_conf.append(('sockets', options.socket))
         # print mod_conf
         b.setVirtualMachineOptions(target_node, newid, mod_conf)
-        print_data("setto le opzioni")
-        # TODO: montare il volume della macchina e modificare hostname, hosts e conf di rete
-        # print b.getVirtualConfig(target_node,newid)
+        logger.info("setto le opzioni")
+        # TODO: montare il volume della macchina e modificare hostname,
+        # hosts e conf di rete
+        logger.debug(b.getVirtualConfig(target_node, newid))
         b.startVirtualMachine(target_node, newid)
-        print_data("accendo la macchina")
+        logger.info("accendo la macchina")
     else:
-        print ("impossibile trovare il template %s" % (vm_name))
+        logger.error("impossibile trovare il template %s" % (vm_name))
         sys.exit(2)
