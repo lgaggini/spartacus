@@ -201,8 +201,6 @@ if __name__ == '__main__':
 
     logger.debug(options)
 
-    sys.exit(0)
-
     logger.info("mi connetto")
     auth = prox_auth('kvm.domain', 'root@pam', 'password')
     proxmox = pyproxmox(auth)
@@ -258,6 +256,7 @@ if __name__ == '__main__':
         logger.info("setto le opzioni")
         # TODO: montare il volume della macchina e modificare hostname,
         # hosts e conf di rete
+
         # logger.debug(proxmox.getVirtualConfig(target_node, newid))
         # proxmox.startVirtualMachine(target_node, newid)
         logger.info("accendo la macchina")
