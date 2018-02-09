@@ -15,6 +15,7 @@ import argparse
 import socket
 from settings.settings import AVAILABLE_VLANS, AVAILABLE_FARMS
 from settings.settings import RAM_SIZES, CORE_SIZES, SOCKET_SIZES
+import yaml
 
 
 logger = logging.getLogger(__file__)
@@ -102,13 +103,33 @@ def getAvailableNode(connessione):
     return None
 
 
-def ip_address(ip_address):
+def valid_ip_address(ip_address):
     try:
         socket.inet_aton(ip_address)
         return ip_address
     except socket.error:
         raise argparse.ArgumentTypeError("%s is an invalid ip address"
                                          % ip_address)
+
+
+def valid_yaml_inventory(yaml_inventory):
+    if not os.path.exists(yaml_inventory):
+        parser.error("The file %s does not exist!" % arg)
+    # TODO: schema validation
+    # elif
+    #
+    else:
+        return yaml_inventory
+
+
+def yaml_parse(path):
+    with open(path, 'r') as yaml_stream:
+        try:
+            options = yaml.safe_load(yaml_stream)
+        except yaml.YAMLError, ex:
+            logger.error('YAML parsing exception: ' + str(ex))
+            sys.exit('exiting')
+    return options
 
 
 if __name__ == '__main__':
@@ -148,9 +169,33 @@ if __name__ == '__main__':
                         choices=AVAILABLE_FARMS, help='farm for puppet')
     parser.add_argument('-e', '--env', help='environment for puppet')
 
-    options = parser.parse_args()
-    logger.debug(options.template)
+    options = {}
 
+    cli_options = parser.parse_args()
+    logger.debug(cli_options)
+
+    if cli_options.name is None and cli_options.inventory is None:
+        parser.print_help()
+        logger.error('argument -n/--name or -i/--inventory are reuired')
+        sys.exit('exiting')
+
+    if cli_options.name is None and cli_options.inventory is not None:
+        parsed_options = yaml_parse(cli_options.inventory)
+        logger.debug(parsed_options)
+        logger.debug(parsed_options['template'])
+        options = parsed_options
+    else:
+        options = vars(cli_options)
+        # fix networks
+        options['networks'] = []
+        network = {'vlan': cli_options.vlan, 'auto': cli_options.auto,
+                   'hot': cli_options.hot, 'ipaddress': cli_options.ipaddress,
+                   'netmask': cli_options.netmask,
+                   'gateway': cli_options.gateway}
+        options['networks'].append(network)
+        # fix hosts
+
+    logger.debug(options)
 
     sys.exit(0)
 
@@ -158,8 +203,8 @@ if __name__ == '__main__':
     a = prox_auth('kvm.domain', 'root@pam', 'password')
     b = pyproxmox(a)
 
-    vm_name = options.template
-    name = options.name
+    vm_name = options['template']
+    name = options['name']
     logger.info("cerco il template")
     vmid, node = findTemplate(b, vm_name)
     logger.info("ho trovato il template")
@@ -194,15 +239,13 @@ if __name__ == '__main__':
         logger.info("finita la clonazione")
         # config = b.getVirtualConfig(target_node,newid)['data']['net0']
         mod_conf = []
-        if (options.net0 is not None):
-            str = 'virtio='+MACprettyprint(randomMAC())+',bridge=vmbr'+options.net0
+        if (options['vlan'] is not None):
+            str = 'virtio=' + MACprettyprint(randomMAC()) +\
+                  ',bridge=vmbr' + options['vlan']
             mod_conf.append(('net0', str))
-        if (options.net1 is not None):
-            str = 'virtio='+MACprettyprint(randomMAC())+',bridge=vmbr'+options.net1
-            mod_conf.append(('net1', str))
-        mod_conf.append(('memory', options.memory))
-        mod_conf.append(('cores', options.core))
-        mod_conf.append(('sockets', options.socket))
+        mod_conf.append(('memory', options['memory']))
+        mod_conf.append(('cores', options['cores']))
+        mod_conf.append(('sockets', options['sockets']))
         # print mod_conf
         b.setVirtualMachineOptions(target_node, newid, mod_conf)
         logger.info("setto le opzioni")
