@@ -212,23 +212,25 @@ if __name__ == '__main__':
     name = options['name']
     logger.info("cerco il template")
     vmid, node = findTemplate(proxmox, vm_name)
+    logger.info("ho trovato il template %s on node %s, vmid %s"
+                % (options['template'], node, vmid,))
 
     if (vmid is not None):
         # prende il primo id disponibile
         newid = proxmox.getClusterVmNextId()['data']
 
-        logger.info("ho trovato il VmNextId")
-        logger.info("ho trovato il nodo disponibile")
-        logger.info("ho trovato lo storage")
+        logger.info('ho trovato il VmNextId: %s' % newid)
         target_node = getAvailableNode(proxmox)
+        logger.info("ho trovato il nodo disponibile: %s" % target_node)
         storage = getNFSVolume(proxmox, options['name'])
+        logger.info("ho trovato lo storage: %s" % storage)
 
         # installa una macchina clonando il template
         install = [('newid', newid), ('name', name), ('full', 1),
                    ('format', 'raw'), ('storage', storage),
                    ('target', target_node)]
-        logger.info("installo la macchina %s (id %s) clonando il template %s \
-                    (id %s su macchina %s) sul nodo %s utilizzando lo storage \
+        logger.info("installo la macchina %s (id %s) clonando il template %s\
+                    (id %s su macchina %s) sul nodo %s utilizzando lo storage\
                     %s" % (name, newid, vm_name, vmid, node, target_node,
                     storage))
         # proxmox.cloneVirtualMachine(node, vmid, install)
