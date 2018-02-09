@@ -121,26 +121,28 @@ if __name__ == '__main__':
     parser.add_argument('-t', '--template', default='masterdebian9',
                         help='Name of template to clone \
                         (default masterdebian9)')
-    parser.add_argument('-n', '--name', required=True,
+    parser.add_argument('-n', '--name', default=None,
                         help='Name of new virtual machines')
+    parser.add_argument('-i', '--inventory', default=None,
+                        help='Yaml file path to read')
     parser.add_argument('-d', '--description', help='description for new vm')
-    parser.add_argument('--vlan0', '--net0', choices=AVAILABLE_VLANS,
+    parser.add_argument('--vlan', '--net', choices=AVAILABLE_VLANS,
                         help='vlan for the first interface')
-    parser.add_argument('--auto0', action='store_true',
+    parser.add_argument('--auto', action='store_true',
                         help='allow auto for the first interface')
-    parser.add_argument('--hot0', action='store_true',
+    parser.add_argument('--hot', action='store_true',
                         help='allow hotplug for the first interface')
-    parser.add_argument('--ipaddres0', type=ip_address,
+    parser.add_argument('--ipaddress', type=valid_ip_address,
                         help='first interface ip address')
-    parser.add_argument('--network0', type=ip_address,
-                        help='first interface network')
-    parser.add_argument('--gateway0', type=ip_address,
+    parser.add_argument('--netmask', type=valid_ip_address,
+                        help='first interface netmask')
+    parser.add_argument('--gateway', type=valid_ip_address,
                         help='first interface gateway')
     parser.add_argument('-m', '--memory', default='4096', choices=RAM_SIZES,
                         help='MB of ram to be allocated (default 4096)')
-    parser.add_argument('-c', '--core', default='2', choices=CORE_SIZES,
+    parser.add_argument('-c', '--cores', default='2', choices=CORE_SIZES,
                         help='# of cores (default 2)')
-    parser.add_argument('-s', '--socket', default='2', choices=SOCKET_SIZES,
+    parser.add_argument('-s', '--sockets', default='2', choices=SOCKET_SIZES,
                         help='# of socket (default 2)')
     parser.add_argument('-f', '--farm', default='farm1',
                         choices=AVAILABLE_FARMS, help='farm for puppet')
