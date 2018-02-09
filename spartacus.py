@@ -4,7 +4,7 @@
 # documentazione pyproxmox:
 # https://github.com/Daemonthread/pyproxmox
 
-import pyproxmox
+from pyproxmox import *
 import time
 
 import sys
@@ -15,7 +15,9 @@ import argparse
 import socket
 from settings.settings import AVAILABLE_VLANS, AVAILABLE_FARMS
 from settings.settings import RAM_SIZES, CORE_SIZES, SOCKET_SIZES
+import rawinit
 import yaml
+import re
 
 
 logger = logging.getLogger(__file__)
