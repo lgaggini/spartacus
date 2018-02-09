@@ -216,6 +216,7 @@ if __name__ == '__main__':
 
     vm_name = options['template']
     name = options['name']
+    description = options['description']
     logger.info("cerco il template")
     vmid, node = findTemplate(proxmox_api, vm_name)
     logger.info("ho trovato il template %s on node %s, vmid %s"
@@ -234,8 +235,8 @@ if __name__ == '__main__':
         # installa una macchina clonando il template
         install = [('newid', newid), ('name', name), ('full', 1),
                    ('format', 'raw'), ('storage', storage),
-                   ('target', target_node)]
         logger.info("installo la macchina %s (id %s) clonando il template %s\
+                   ('target', target_node), ('description', description)]
                     (id %s su macchina %s) sul nodo %s utilizzando lo storage\
                     %s" % (name, newid, vm_name, vmid, node, target_node,
                     storage))
