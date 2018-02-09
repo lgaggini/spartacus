@@ -85,7 +85,7 @@ def getAvailableNode(connessione):
     nodes = connessione.getClusterNodeList()
     for node in nodes['data']:
         n = node['node']
-        status = b.getNodeStatus(n)
+        status = connessione.getNodeStatus(n)
         ncpu = status['data']['cpuinfo']['cpus']
         cpu1 = int(float(status['data']['loadavg'][0]))
         cpu5 = int(float(status['data']['loadavg'][1]))
@@ -200,24 +200,24 @@ if __name__ == '__main__':
     sys.exit(0)
 
     logger.info("mi connetto")
-    a = prox_auth('kvm.domain', 'root@pam', 'password')
-    b = pyproxmox(a)
+    auth = prox_auth('kvm.domain', 'root@pam', 'password')
+    proxmox = pyproxmox(auth)
+
 
     vm_name = options['template']
     name = options['name']
     logger.info("cerco il template")
-    vmid, node = findTemplate(b, vm_name)
-    logger.info("ho trovato il template")
+    vmid, node = findTemplate(proxmox, vm_name)
 
     if (vmid is not None):
         # prende il primo id disponibile
-        newid = b.getClusterVmNextId()['data']
+        newid = proxmox.getClusterVmNextId()['data']
 
         logger.info("ho trovato il VmNextId")
-        target_node = getAvailableNode(b)
         logger.info("ho trovato il nodo disponibile")
         storage = getNFSVolume(b)
         logger.info("ho trovato lo storage")
+        target_node = getAvailableNode(proxmox)
 
         # installa una macchina clonando il template
         install = [('newid', newid), ('name', name), ('full', 1),
@@ -227,14 +227,15 @@ if __name__ == '__main__':
                     (id %s su macchina %s) sul nodo %s utilizzando lo storage \
                     %s" % (name, newid, vm_name, vmid, node, target_node,
                     storage))
-        b.cloneVirtualMachine(node, vmid, install)
+        # proxmox.cloneVirtualMachine(node, vmid, install)
         logger.info("inizio la clonazione")
 
-        while True:
-            if b.getVirtualStatus(target_node, newid)['status']['ok'] is True:
-                break
-            logger.info("aspetto altri 5 secondi")
-            time.sleep(5)
+        # while True:
+        #    if proxmox.getVirtualStatus(target_node, newid)['status']['ok']\
+        #       is True:
+        #        break
+        #    logger.info("aspetto altri 5 secondi")
+        #    time.sleep(5)
 
         logger.info("finita la clonazione")
         # config = b.getVirtualConfig(target_node,newid)['data']['net0']
@@ -246,13 +247,13 @@ if __name__ == '__main__':
         mod_conf.append(('memory', options['memory']))
         mod_conf.append(('cores', options['cores']))
         mod_conf.append(('sockets', options['sockets']))
-        # print mod_conf
-        b.setVirtualMachineOptions(target_node, newid, mod_conf)
+        logger.debug(mod_conf)
+        # proxmox.setVirtualMachineOptions(target_node, newid, mod_conf)
         logger.info("setto le opzioni")
         # TODO: montare il volume della macchina e modificare hostname,
         # hosts e conf di rete
-        logger.debug(b.getVirtualConfig(target_node, newid))
-        b.startVirtualMachine(target_node, newid)
+        # logger.debug(proxmox.getVirtualConfig(target_node, newid))
+        # proxmox.startVirtualMachine(target_node, newid)
         logger.info("accendo la macchina")
     else:
         logger.error("impossibile trovare il template %s" % (vm_name))
