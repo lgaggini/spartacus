@@ -13,6 +13,8 @@ import logging
 import coloredlogs
 import argparse
 import socket
+from settings.settings import AVAILABLE_VLANS, AVAILABLE_FARMS
+from settings.settings import RAM_SIZES, CORE_SIZES, SOCKET_SIZES
 
 
 logger = logging.getLogger(__file__)
@@ -128,7 +130,7 @@ if __name__ == '__main__':
     parser.add_argument('-n', '--name', required=True,
                         help='Name of new virtual machines')
     parser.add_argument('-d', '--description', help='description for new vm')
-    parser.add_argument('-0', '--net0', '--vlan0', choices=available_vlan,
+    parser.add_argument('-0', '--net0', '--vlan0', choices=AVAILABLE_VLANS,
                         help='vlan for the first interface')
     parser.add_argument('--auto0', action='store_true',
                         help='allow auto for the first interface')
@@ -140,14 +142,14 @@ if __name__ == '__main__':
                         help='first interface network')
     parser.add_argument('--gateway0', type=ip_address,
                         help='first interface gateway')
-    parser.add_argument('-m', '--memory', default='4096', choices=ram_sizes,
+    parser.add_argument('-m', '--memory', default='4096', choices=RAM_SIZES,
                         help='MB of ram to be allocated (default 4096)')
-    parser.add_argument('-c', '--core', default='2', choices=core_sizes,
+    parser.add_argument('-c', '--core', default='2', choices=CORE_SIZES,
                         help='# of cores (default 2)')
-    parser.add_argument('-s', '--socket', default='2', choices=socket_sizes,
+    parser.add_argument('-s', '--socket', default='2', choices=SOCKET_SIZES,
                         help='# of socket (default 2)')
     parser.add_argument('-f', '--farm', default='farm1',
-                        choices=farm_availables, help='farm for puppet')
+                        choices=AVAILABLE_FARMS, help='farm for puppet')
     parser.add_argument('-e', '--env', help='environment for puppet')
 
     options = parser.parse_args()
