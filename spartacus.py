@@ -6,11 +6,14 @@
 
 import pyproxmox
 import time
-from optparse import OptionParser
+
 import sys
 import random
 import logging
 import coloredlogs
+import argparse
+import socket
+
 
 logger = logging.getLogger(__file__)
 
@@ -97,38 +100,63 @@ def getAvailableNode(connessione):
     return None
 
 
-class ScriptParser(OptionParser):
-    def format_epilog(self, formatter):
-        return self.epilog
+def ip_address(ip_address):
+    try:
+        socket.inet_aton(ip_address)
+        return ip_address
+    except socket.error:
+        raise argparse.ArgumentTypeError("%s is an invalid ip address"
+                                         % ip_address)
 
 
 if __name__ == '__main__':
 
-    parser = ScriptParser(epilog=
-                          """
-                          Examples:
-                          """+sys.argv[0]+""" -t masterdebian8 -n test   # Clona la macchina masterdebian8 e la chiama test
-                          """+sys.argv[0]+""" -t masterdebian8 -n test -0 6 -1 124   # Clona la macchina masterdebian8 e la chiama test con 2 interfacce di rete (eth0 in vlan 6 e eth1 in vlan 124)
-                          """)
+    log_init()
 
-    parser.add_option("-t", "--template", dest="template", type="string", default=None, help="Name of template to clone")
-    parser.add_option("-n", "--name", dest="name", type="string", default=None, help="Name of new virtual machine")
-    parser.add_option("-0", "--net0", dest="net0", type="string", default=None, help="vlan of net0")
-    parser.add_option("-1", "--net1", dest="net1", type="string", default=None, help="vlan of net1")
-    parser.add_option("-m", "--memory", dest="memory", type="string", default=4096, help="MB of RAM (default 4096 MB)")
-    parser.add_option("-c", "--core", dest="core", type="string", default=2, help="# of cores (default 2)")
-    parser.add_option("-s", "--socket", dest="socket", type="string", default=2, help="# of sockets (default 2)")
+    available_vlan = ['6', '116']
+    ram_sizes = ['1024', '2048', '4096']
+    core_sizes = ['1', '2', '4']
+    socket_sizes = ['1', '2', '4']
+    farm_availables = ['farm1']
 
-    (options, args) = parser.parse_args()
+    description = "spartacus, deploy vm on proxmox cluster"
+    parser = argparse.ArgumentParser(description=description)
 
-    # argomenti obbligatori
-    if (options.template is None or options.name is None):
-        logger.error('Error: --action must be show or \
-                     delete or search or status')
-        parser.print_help()
-        sys.exit(1)
+    parser.add_argument('-t', '--template', default='masterdebian9',
+                        help='Name of template to clone \
+                        (default masterdebian9)')
+    parser.add_argument('-n', '--name', required=True,
+                        help='Name of new virtual machines')
+    parser.add_argument('-d', '--description', help='description for new vm')
+    parser.add_argument('-0', '--net0', '--vlan0', choices=available_vlan,
+                        help='vlan for the first interface')
+    parser.add_argument('--auto0', action='store_true',
+                        help='allow auto for the first interface')
+    parser.add_argument('--hot0', action='store_true',
+                        help='allow hotplug for the first interface')
+    parser.add_argument('--ipaddres0', type=ip_address,
+                        help='first interface ip address')
+    parser.add_argument('--network0', type=ip_address,
+                        help='first interface network')
+    parser.add_argument('--gateway0', type=ip_address,
+                        help='first interface gateway')
+    parser.add_argument('-m', '--memory', default='4096', choices=ram_sizes,
+                        help='MB of ram to be allocated (default 4096)')
+    parser.add_argument('-c', '--core', default='2', choices=core_sizes,
+                        help='# of cores (default 2)')
+    parser.add_argument('-s', '--socket', default='2', choices=socket_sizes,
+                        help='# of socket (default 2)')
+    parser.add_argument('-f', '--farm', default='farm1',
+                        choices=farm_availables, help='farm for puppet')
+    parser.add_argument('-e', '--env', help='environment for puppet')
 
-    print_data("mi connetto")
+    options = parser.parse_args()
+    logger.debug(options.template)
+
+
+    sys.exit(0)
+
+    logger.info("mi connetto")
     a = prox_auth('kvm.domain', 'root@pam', 'password')
     b = pyproxmox(a)
 
