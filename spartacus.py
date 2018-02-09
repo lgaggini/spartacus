@@ -77,13 +77,9 @@ def findTemplate(connessione, vmname):
         n = node['node']
         machines = connessione.getNodeVirtualIndex(n)
         for m in machines['data']:
-            data = connessione.getVirtualConfig(n, m['vmid'])
-            # if 'net0' in data['data']:
-            #    print data['data']['net0']
-            # if 'net1' in data['data']:
-            #    print data['data']['net1']
-        if (m['name'] == vmname):
-            return m['vmid'], n
+            logging.debug(m['name'])
+            if (m['name'] == vmname):
+                return m['vmid'], n
     return None, None
 
 
