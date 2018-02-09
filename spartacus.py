@@ -17,6 +17,7 @@ from settings.settings import proxmox
 from settings.settings import AVAILABLE_VLANS, AVAILABLE_FARMS
 from settings.settings import RAM_SIZES, CORE_SIZES, SOCKET_SIZES
 from settings.settings import ODD_VOL, EVEN_VOL, VOL_THRES
+from settings.settings import MAGIC_THRES, RAM_THRES
 import rawinit
 import yaml
 import re
@@ -80,7 +81,7 @@ def findTemplate(connessione, vmname):
         n = node['node']
         machines = connessione.getNodeVirtualIndex(n)
         for m in machines['data']:
-            logging.debug(m['name'])
+            logger.debug(m['name'])
             if (m['name'] == vmname):
                 return m['vmid'], n
     return None, None
