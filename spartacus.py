@@ -124,7 +124,7 @@ if __name__ == '__main__':
     parser.add_argument('-n', '--name', required=True,
                         help='Name of new virtual machines')
     parser.add_argument('-d', '--description', help='description for new vm')
-    parser.add_argument('-0', '--net0', '--vlan0', choices=AVAILABLE_VLANS,
+    parser.add_argument('--vlan0', '--net0', choices=AVAILABLE_VLANS,
                         help='vlan for the first interface')
     parser.add_argument('--auto0', action='store_true',
                         help='allow auto for the first interface')
