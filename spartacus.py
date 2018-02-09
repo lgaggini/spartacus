@@ -115,12 +115,6 @@ if __name__ == '__main__':
 
     log_init()
 
-    available_vlan = ['6', '116']
-    ram_sizes = ['1024', '2048', '4096']
-    core_sizes = ['1', '2', '4']
-    socket_sizes = ['1', '2', '4']
-    farm_availables = ['farm1']
-
     description = "spartacus, deploy vm on proxmox cluster"
     parser = argparse.ArgumentParser(description=description)
 
