@@ -104,7 +104,7 @@ def getAvailableNode(connessione):
                                                freeram, percram, magic))
         d[n] = magic
 
-        for w in sorted(d, key=d.get, reverse=True):
+    for w in sorted(d, key=d.get, reverse=True):
             if d[w] >= 40:
                 return w
     return None
