@@ -86,7 +86,7 @@ def findTemplate(connessione, vmname):
     return None, None
 
 
-def getAvailableNode(connessione):
+def getAvailableNode(connessione, memory):
     """calcola qual e' la macchina piu' scarica"""
     d = {}
     nodes = connessione.getClusterNodeList()
@@ -102,12 +102,17 @@ def getAvailableNode(connessione):
         magic = ncpu - (cpu1 + cpu5)/2 + int(percram)
         logger.debug('%s %s %s %s %s %s %s' % (n, cpu1, cpu5, totram,
                                                freeram, percram, magic))
-        d[n] = magic
+        d[n] = {'magic': magic, 'freeram': freeram}
 
-    for w in sorted(d, key=d.get, reverse=True):
-            if d[w] >= 40:
-                return w
-    return None
+    for node_stat in sorted(d.items(), key=lambda x: x[1]['magic'],
+                            reverse=True):
+        logger.debug(node_stat)
+        logger.debug(node_stat[1])
+        if node_stat[1]['magic'] >= MAGIC_THRES and\
+           node_stat[1]['freeram'] > int(memory) + RAM_THRES:
+            return node_stat[0]
+    logger.error("Impossible trovare una macchina con risorse sufficienti")
+    sys.exit('exiting')
 
 
 def valid_ip_address(ip_address):
@@ -220,7 +225,7 @@ if __name__ == '__main__':
         newid = proxmox_api.getClusterVmNextId()['data']
 
         logger.info('ho trovato il VmNextId: %s' % newid)
-        target_node = getAvailableNode(proxmox_api)
+        target_node = getAvailableNode(proxmox_api, options['memory'])
         logger.info("ho trovato il nodo disponibile: %s" % target_node)
         storage = getNFSVolume(proxmox_api, options['name'])
         logger.info("ho trovato lo storage: %s" % storage)

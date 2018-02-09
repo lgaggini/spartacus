@@ -12,7 +12,8 @@ AVAILABLE_FARMS = ['farm1', 'farm2', 'farm3']
 ODD_VOL = 'pve03'
 EVEN_VOL = 'pve04'
 VOL_THRES = 100000000000
-
+MAGIC_THRES = 40
+RAM_THRES = 8192
 
 # proxmox settings
 proxmox = {}
