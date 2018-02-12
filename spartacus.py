@@ -13,12 +13,7 @@ import logging
 import coloredlogs
 import argparse
 import socket
-from settings.settings import proxmox
-from settings.settings import AVAILABLE_VLANS, AVAILABLE_FARMS
-from settings.settings import RAM_SIZES, CORE_SIZES, SOCKET_SIZES
-from settings.settings import ODD_VOL, EVEN_VOL, VOL_THRES
-from settings.settings import MAGIC_THRES, RAM_THRES
-from settings.settings import DEFAULT_TEMPLATE, DEFAULT_TEMPLATEID
+from settings.settings import PROXMOX, VM_RESOURCES, VM_DEFAULTS, KVM_THRES
 import rawinit
 import yaml
 import re
@@ -51,24 +46,24 @@ def getNFSVolume(connessione, name):
     """prende il volume attivo pveXX in base all indice della
     macchina e controlla lo spazio disponibile"""
 
-    volume = ODD_VOL
+    volume = VM_DEFAULTS['ODD_VOL']
 
     m = re.search(r'\d+$', name)
     if m is not None:
         index = m.group()
         if index % 2 == 0:
-            volume = EVEN_VOL
+            volume = VM_DEFAULTS['EVEN_VOL']
 
-    storage = connessione.getNodeStorage(proxmox['host'].split('.')[0])
+    storage = connessione.getNodeStorage(PROXMOX['HOST'].split('.')[0])
     logger.debug(storage)
 
     for s in storage['data']:
         if volume in s['storage']:
             avail = s['avail']
             logger.debug(avail)
-            if avail <= VOL_THRES:
+            if avail <= KVM_THRES['SPACE']:
                 logger.error('Available space %s is under the minimum allowed (%s) on \
-                              %s' % (avail, VOL_THRES, volume))
+                              %s' % (avail, KVM_THRES['SPACE'], volume))
                 sys.exit('exiting')
 
     return volume
@@ -111,8 +106,8 @@ def getAvailableNode(connessione, memory):
                             reverse=True):
         logger.debug(node_stat)
         logger.debug(node_stat[1])
-        if node_stat[1]['magic'] >= MAGIC_THRES and\
-           node_stat[1]['freeram'] > int(memory) + RAM_THRES:
+        if node_stat[1]['magic'] >= KVM_THRES['MAGIC'] and\
+           node_stat[1]['freeram'] > int(memory) + KVM_THRES['MEMORY']:
             return node_stat[0]
     logger.error("Impossible trovare una macchina con risorse sufficienti")
     sys.exit('exiting')
@@ -165,18 +160,18 @@ if __name__ == '__main__':
     description = "spartacus, deploy vm on proxmox cluster"
     parser = argparse.ArgumentParser(description=description)
 
-    parser.add_argument('-t', '--template', default=DEFAULT_TEMPLATE,
+    parser.add_argument('-t', '--template', default=VM_DEFAULTS['TEMPLATE'],
                         help='Name of template to clone \
-                        (default %s)' % DEFAULT_TEMPLATE)
-    parser.add_argument('--templateid', default=DEFAULT_TEMPLATEID,
+                        (default %s)' % VM_DEFAULTS['TEMPLATE'])
+    parser.add_argument('--templateid', default=VM_DEFAULTS['TEMPLATEID'],
                         help='id of the template to clone \
-                        (default %s)' % DEFAULT_TEMPLATEID)
+                        (default %s)' % VM_DEFAULTS['TEMPLATEID'])
     parser.add_argument('-n', '--name', default=None,
                         help='Name of new virtual machines')
     parser.add_argument('-i', '--inventory', default=None,
                         help='Yaml file path to read')
     parser.add_argument('-d', '--description', help='description for new vm')
-    parser.add_argument('--vlan', '--net', choices=AVAILABLE_VLANS,
+    parser.add_argument('--vlan', '--net', choices=VM_RESOURCES['VLANS'],
                         help='vlan for the first interface')
     parser.add_argument('--auto', action='store_true',
                         help='allow auto for the first interface')
@@ -188,14 +183,18 @@ if __name__ == '__main__':
                         help='first interface netmask')
     parser.add_argument('--gateway', type=valid_ip_address,
                         help='first interface gateway')
-    parser.add_argument('-m', '--memory', default='4096', choices=RAM_SIZES,
+    parser.add_argument('-m', '--memory', default='4096',
+                        choices=VM_RESOURCES['RAM'],
                         help='MB of ram to be allocated (default 4096)')
-    parser.add_argument('-c', '--cores', default='2', choices=CORE_SIZES,
+    parser.add_argument('-c', '--cores', default='2',
+                        choices=VM_RESOURCES['CORES'],
                         help='# of cores (default 2)')
-    parser.add_argument('-s', '--sockets', default='2', choices=SOCKET_SIZES,
+    parser.add_argument('-s', '--sockets', default='2',
+                        choices=VM_RESOURCES['SOCKETS'],
                         help='# of socket (default 2)')
     parser.add_argument('-f', '--farm', default='farm1',
-                        choices=AVAILABLE_FARMS, help='farm for puppet')
+                        choices=VM_RESOURCES['FARMS'],
+                        help='farm for puppet')
     parser.add_argument('-e', '--env', help='environment for puppet')
 
     options = {}
@@ -227,7 +226,7 @@ if __name__ == '__main__':
     logger.debug(options)
 
     logger.info("mi connetto")
-    auth = prox_auth(proxmox['host'], proxmox['user'], proxmox['password'])
+    auth = prox_auth(PROXMOX['HOST'], PROXMOX['USER'], PROXMOX['PASSWORD'])
     proxmox_api = pyproxmox(auth)
 
     vm_name = options['template']
@@ -235,7 +234,7 @@ if __name__ == '__main__':
     description = options['description']
     logger.info("cerco il template")
     if options['templateid'] is None or\
-       options['template'] != DEFAULT_TEMPLATE:
+       options['template'] != VM_DEFAULTS['TEMPLATE']:
         vmid, node = findTemplate(proxmox_api, vm_name)
     else:
         vmid = options['templateid']

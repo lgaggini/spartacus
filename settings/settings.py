@@ -4,23 +4,39 @@ DEV = '/dev/nbd0'
 WORKING_DIR = '.'
 TMP_DIR = '%s/generated' % WORKING_DIR
 STATIC_DIR = '%s/static' % WORKING_DIR
-AVAILABLE_VLANS = ['6', '116']
-RAM_SIZES = ['128', '256', '512', '1024', '2048', '4096']
-CORE_SIZES = ['1', '2', '4', '8', '16']
-SOCKET_SIZES = ['1', '2', '4', '8', '16']
-AVAILABLE_FARMS = ['farm1', 'farm2', 'farm3']
-ODD_VOL = 'pve03'
-EVEN_VOL = 'pve04'
-VOL_THRES = 100000000000
-MAGIC_THRES = 40
-RAM_THRES = 8192
-DEFAULT_TEMPLATE = 'masterdebian9'
-DEFAULT_TEMPLATEID = '694'
+
+# vm options available
+VM_RESOURCES = {
+    'VLANS': ['6', '116'],
+    'RAM': ['128', '256', '512', '1024', '2048', '4096'],
+    'CORES': ['1', '2', '4', '8', '16'],
+    'SOCKETS': ['1', '2', '4', '8', '16'],
+    'FARMS': ['farm1', 'farm2', 'farm3']
+}
+
+# kvm resources thresolds
+KVM_THRES = {
+    'SPACE': 100000000000,
+    'MAGIC': 40,
+    'MEMORY': 8192,
+}
+
+# vm defaults
+VM_DEFAULTS = {
+    'ODD_VOL': 'pve03',
+    'EVEN_VOL': 'pve04',
+    'TEMPLATE': 'masterdebian9',
+    'TEMPLATEID': '694',
+    'CORES': '2',
+    'SOCKETS': '2',
+    'RAM': '4096',
+    'FARM': 'farm1'
+}
 
 # proxmox settings
-proxmox = {}
-
-proxmox['host'] = 'kvm.domain'
-proxmox['ssh_host'] = 'localhost'
-proxmox['user'] = 'root@pam'
-proxmox['password'] = 'password'
+PROXMOX = {
+    'HOST': 'kvm.domain',
+    'SSH_HOST': 'localhost',
+    'USER': 'root@pam',
+    'PASSWORD': 'password'
+}

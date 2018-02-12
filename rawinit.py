@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 
-from settings.settings import proxmox, SSH_HOST_KEY, DEV, TMP_DIR, STATIC_DIR
+from settings.settings import PROXMOX, SSH_HOST_KEY, DEV, TMP_DIR, STATIC_DIR
 from paramiko import SSHClient, WarningPolicy
 from paramiko import RSAKey, ECDSAKey
 from jinja2 import Environment, FileSystemLoader
@@ -51,8 +51,8 @@ def get_proxmox_ssh(proxmox):
     logger.info('opening connection to %s' % proxmox['host'])
     proxmox_ssh = SSHClient()
     proxmox_ssh.set_missing_host_key_policy(WarningPolicy())
-    proxmox_ssh.connect(proxmox['ssh_host'],
-                        username=proxmox['user'].split('@')[0])
+    proxmox_ssh.connect(PROXMOX['SSH_HOST'],
+                        username=PROXMOX['USER'].split('@')[0])
     return proxmox_ssh
 
 

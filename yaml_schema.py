@@ -1,10 +1,7 @@
 #! /usr/bin/env python
 
-from settings.settings import DEFAULT_TEMPLATE, DEFAULT_TEMPLATEID
-from settings.settings import AVAILABLE_VLANS, AVAILABLE_FARMS
-from settings.settings import RAM_SIZES, CORE_SIZES, SOCKET_SIZES
-from settings.settings import DEFAULT_SOCKETS, DEFAULT_CORES, DEFAULT_RAM
-from settings.settings import DEFAULT_FARM
+from settings.settings import VM_RESOURCES, VM_DEFAULTS, KVM_THRES
+
 from cerberus import Validator
 import socket
 
@@ -36,7 +33,7 @@ networks_schema = {
         'type': 'dict',
         'schema': {
             'vlan': {
-                'type': 'string', 'allowed': AVAILABLE_VLANS
+                'type': 'string', 'allowed': VM_RESOURCES['VLANS']
             },
             'auto': {
                 'type': 'boolean', 'default': False
@@ -61,19 +58,20 @@ networks_schema = {
 }
 
 vm_schema = {
-    'template': {'type': 'string', 'default': DEFAULT_TEMPLATE},
-    'templateid': {'type': 'string', 'default': DEFAULT_TEMPLATEID},
+    'template': {'type': 'string', 'default': VM_DEFAULTS['TEMPLATE']},
+    'templateid': {'type': 'string', 'default': VM_DEFAULTS['TEMPLATEID']},
     'name': {'required': True, 'type': 'string'},
     'description': {'type': 'string'},
     'hosts': hosts_schema,
-    'sockets': {'type': 'string', 'allowed': SOCKET_SIZES,
-                'default': DEFAULT_SOCKETS},
-    'cores': {'type': 'string', 'allowed': CORE_SIZES,
-              'default': DEFAULT_CORES},
-    'memory': {'type': 'string', 'allowed': RAM_SIZES, 'default': DEFAULT_RAM},
+    'sockets': {'type': 'string', 'allowed': VM_RESOURCES['SOCKETS'],
+                'default': VM_DEFAULTS['SOCKETS']},
+    'cores': {'type': 'string', 'allowed': VM_RESOURCES['CORES'],
+              'default': VM_DEFAULTS['CORES']},
+    'memory': {'type': 'string', 'allowed': VM_RESOURCES['RAM'],
+               'default': VM_DEFAULTS['RAM']},
     'networks': networks_schema,
-    'farm':  {'type': 'string', 'allowed': AVAILABLE_FARMS,
-              'default': DEFAULT_FARM},
+    'farm':  {'type': 'string', 'allowed': VM_RESOURCES['FARMS'],
+              'default': VM_DEFAULTS['FARM']},
     'env':  {'type': 'string'}
 }
 
