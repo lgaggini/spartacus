@@ -22,6 +22,7 @@ from settings.settings import DEFAULT_TEMPLATE, DEFAULT_TEMPLATEID
 import rawinit
 import yaml
 import re
+from yaml_schema import vm_schema, VMDefValidator
 
 
 logger = logging.getLogger(__file__)
@@ -129,21 +130,32 @@ def valid_ip_address(ip_address):
 def valid_yaml_inventory(yaml_inventory):
     if not os.path.exists(yaml_inventory):
         parser.error("The file %s does not exist!" % arg)
-    # TODO: schema validation
-    # elif
-    #
     else:
         return yaml_inventory
 
 
-def yaml_parse(path):
+def valid_yaml_schema(yaml, schema):
+    validator = VMDefValidator(schema)
+    logger.debug(yaml)
+    normalized_yaml = validator.normalized(yaml)
+    isvalid = validator.validate(normalized_yaml)
+    return normalized_yaml, isvalid, validator.errors
+
+
+def yaml_parse(path, schema):
     with open(path, 'r') as yaml_stream:
         try:
             options = yaml.safe_load(yaml_stream)
         except yaml.YAMLError, ex:
             logger.error('YAML parsing exception: ' + str(ex))
             sys.exit('exiting')
-    return options
+        options, isvalid, errors = valid_yaml_schema(options, schema)
+        if isvalid:
+            return options
+        else:
+            logger.error('YAML schema error: ')
+            logger.error(errors)
+            sys.exit('exiting')
 
 
 if __name__ == '__main__':
@@ -197,7 +209,7 @@ if __name__ == '__main__':
         sys.exit('exiting')
 
     if cli_options.name is None and cli_options.inventory is not None:
-        parsed_options = yaml_parse(cli_options.inventory)
+        parsed_options = yaml_parse(cli_options.inventory, vm_schema)
         logger.debug(parsed_options)
         logger.debug(parsed_options['template'])
         options = parsed_options
