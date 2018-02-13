@@ -118,8 +118,23 @@ def valid_ip_address(ip_address):
         socket.inet_aton(ip_address)
         return ip_address
     except socket.error:
-        raise argparse.ArgumentTypeError("%s is an invalid ip address"
+        raise argparse.ArgumentTypeError('%s is an invalid ip address'
                                          % ip_address)
+
+
+def valid_netmask(netmask):
+    valid_ip_address(netmask)
+    seen0 = False
+    for x in netmask.split('.'):
+        logger.debug(bin(int(x))[2:])
+        for c in bin(int(x))[2:]:
+            if '1' == c:
+                if seen0:
+                    raise argparse.ArgumentTypeError('%s is an invalid netmask'
+                                                     % netmask)
+            else:
+                seen0 = True
+    return netmask
 
 
 def valid_yaml_inventory(yaml_inventory):
@@ -179,7 +194,7 @@ if __name__ == '__main__':
                         help='allow hotplug for the first interface')
     parser.add_argument('--ipaddress', type=valid_ip_address,
                         help='first interface ip address')
-    parser.add_argument('--netmask', type=valid_ip_address,
+    parser.add_argument('--netmask', type=valid_netmask,
                         help='first interface netmask')
     parser.add_argument('--gateway', type=valid_ip_address,
                         help='first interface gateway')

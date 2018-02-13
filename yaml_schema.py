@@ -46,7 +46,7 @@ networks_schema = {
                 'dependencies': ['netmask', 'vlan']
             },
             'netmask': {
-                'type': 'ipaddress',
+                'type': 'netmask',
                 'dependencies': ['ipaddress']
             },
             'gateway': {
@@ -83,3 +83,17 @@ class VMDefValidator(Validator):
             return True
         except socket.error:
             return False
+
+    def _validate_type_netmask(self, value):
+        if not self._validate_type_ipaddress(value):
+            return False
+        netmask = value
+        seen0 = False
+        for x in netmask.split('.'):
+            for c in bin(int(x))[2:]:
+                if '1' == c:
+                    if seen0:
+                        return False
+                else:
+                    seen0 = True
+        return True
