@@ -24,7 +24,12 @@ def template_compile(configs):
     env = Environment(loader=FileSystemLoader('templates'))
 
     custom_tmp_fd = '%s/%s' % (TMP_DIR, configs['name'])
-    subprocess.call(['mkdir', '-p', custom_tmp_fd])
+    try:
+        subprocess.call(['mkdir', '-p', custom_tmp_fd])
+    except subprocess.CalledProcessError, ex:
+        logger.error('error creating the folder %s: %s' % (custom_tmp_fd,
+                                                           ex.output))
+        sys.exit('exiting')
 
     for config_key in TEMPLATE_MAP.keys():
         j2_template = env.get_template('%s.j2' % config_key)
