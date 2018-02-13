@@ -231,7 +231,7 @@ if __name__ == '__main__':
     else:
         options = vars(cli_options)
         # fix networks
-        options['networks'] = []
+        options['interfaces'] = []
         network = {'vlan': cli_options.vlan, 'auto': cli_options.auto,
                    'hot': cli_options.hot, 'ipaddress': cli_options.ipaddress,
                    'netmask': cli_options.netmask,
@@ -288,10 +288,10 @@ if __name__ == '__main__':
         logger.info("finita la clonazione")
         # config = b.getVirtualConfig(target_node,newid)['data']['net0']
         mod_conf = []
-        for network in options['networks']:
-            if (network['vlan'] is not None):
+        for i, interface in enumerate(options['interfaces']):
+            if (interface['vlan'] is not None):
                 str = 'virtio=' + MACprettyprint(randomMAC()) +\
-                      ',bridge=vmbr' + network['vlan']
+                      ',bridge=vmbr' + interface['vlan']
                 mod_conf.append(('net0', str))
                 logger.debug(mod_conf)
         mod_conf.append(('memory', options['memory']))

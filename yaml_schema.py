@@ -26,7 +26,7 @@ hosts_schema = {
     }
 }
 
-networks_schema = {
+interfaces_schema = {
     'type': 'list',
     'minlength': 1,
     'schema': {
@@ -69,7 +69,7 @@ vm_schema = {
               'default': VM_DEFAULTS['CORES']},
     'memory': {'type': 'string', 'allowed': VM_RESOURCES['RAM'],
                'default': VM_DEFAULTS['RAM']},
-    'networks': networks_schema,
+    'interfaces': interfaces_schema,
     'farm':  {'type': 'string', 'allowed': VM_RESOURCES['FARMS'],
               'default': VM_DEFAULTS['FARM']},
     'env':  {'type': 'string'}
