@@ -166,9 +166,9 @@ def rawinit(configs, src, dst, dev=DEV, part='1'):
     logger.info('Unmounting of %s to %s by %s' % (src, dst, dev))
     check_exit(*image_umount(proxmox_ssh, dev, src, dst))
     logger.info('Image %s unmounted from %s by %s' % (src, dst, dev))
-    logger.info('Closing connection to %s' % PROXMOX['HOST'])
+    logger.info('Closing connection to %s' % PROXMOX['SSH_HOST'])
     proxmox_ssh.close()
-    logger.info('Connection to %s closed' % PROXMOX['HOST'])
+    logger.info('Connection to %s closed' % PROXMOX['SSH_HOST'])
 
 
 if __name__ == '__main__':
