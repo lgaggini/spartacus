@@ -1,7 +1,7 @@
 127.0.0.1       localhost
 
 {% for item in var -%}
-{{ item.ip_address }}   {{ item.fqdn }}   {{ item.alias }}
+{{ item.ipaddress }}   {{ item.name }}   {{ item.alias }}
 {% endfor -%}
 
 # The following lines are desirable for IPv6 capable hosts

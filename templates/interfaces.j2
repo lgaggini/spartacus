@@ -15,7 +15,7 @@ auto {{ item.id }}
 {% if item.hotplug -%}
 allow-hotplug {{ item.id }}
 {% endif  -%}
-address {{ item.address }}
+address {{ item.ipaddress }}
 netmask {{ item.netmask }}
 {% if item.gateway is defined -%}
 gateway {{ item.gateway }}
