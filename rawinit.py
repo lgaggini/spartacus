@@ -9,6 +9,7 @@ import sys
 import logging
 import argparse
 import coloredlogs
+import subprocess
 
 logger = logging.getLogger('rawinit')
 
@@ -22,9 +23,12 @@ def log_init():
 def template_compile(configs):
     env = Environment(loader=FileSystemLoader('templates'))
 
+    custom_tmp_fd = '%s/%s' % (TMP_DIR, configs['name'])
+    subprocess.call(['mkdir', '-p', custom_tmp_fd])
+
     for config_key in TEMPLATE_MAP.keys():
         j2_template = env.get_template('%s.j2' % config_key)
-        with open('%s/%s' % (TMP_DIR, config_key), 'w') as config_file:
+        with open('%s/%s' % (custom_tmp_fd, config_key), 'w') as config_file:
             var = configs[TEMPLATE_MAP[config_key]]
             config_file.write(j2_template.render(var=var))
 
@@ -141,24 +145,26 @@ def rawinit(configs, src, dst, dev=DEV, part='1'):
     check_exit(*image_mount(proxmox_ssh, dev, src, dst, part))
     logger.info('Image %s mounted to %s by %sp%s' % (src, dst, dev, part))
     logger.info('Deploy configurations')
-    deploy(proxmox_ssh, '%s/interfaces' % TMP_DIR, '%s/etc/network/interfaces'
-           % dst)
-    deploy(proxmox_ssh, '%s/hostname' % TMP_DIR, '%s/etc/hostname' % dst)
-    deploy(proxmox_ssh, '%s/serverfarm' % TMP_DIR, '%s/etc/serverfarm' % dst)
-    deploy(proxmox_ssh, '%s/pupuppetenvironment' % TMP_DIR,
+    custom_tmp_fd = '%s/%s' % (TMP_DIR, configs['name'])
+    deploy(proxmox_ssh, '%s/interfaces' % custom_tmp_fd,
+           '%s/etc/network/interfaces' % dst)
+    deploy(proxmox_ssh, '%s/hostname' % custom_tmp_fd, '%s/etc/hostname' % dst)
+    deploy(proxmox_ssh, '%s/serverfarm' % custom_tmp_fd,
+           '%s/etc/serverfarm' % dst)
+    deploy(proxmox_ssh, '%s/pupuppetenvironment' % custom_tmp_fd,
            '%s/etc/pupuppetenvironment' % dst)
-    deploy(proxmox_ssh, '%s/hosts' % TMP_DIR, '%s/etc/hosts' % dst)
-    deploy(proxmox_ssh, '%s/puppet.conf' % TMP_DIR,
+    deploy(proxmox_ssh, '%s/hosts' % custom_tmp_fd, '%s/etc/hosts' % dst)
+    deploy(proxmox_ssh, '%s/puppet.conf' % custom_tmp_fd,
            '%s/etc/puppet/puppet.conf' % dst)
     logger.info('Generate and deploy tmp RSA 2048 bit host keys for \
                 first ssh access')
-    generate_ssh_hostkeys('%s/%s' % (TMP_DIR, SSH_HOST_KEY))
+    generate_ssh_hostkeys('%s/%s' % (custom_tmp_fd, SSH_HOST_KEY))
     logger.info('Generated tmp RSA 2048 bit host keys for first ssh access')
     priv = '%s' % SSH_HOST_KEY
     pub = '%s.pub' % SSH_HOST_KEY
-    deploy(proxmox_ssh, '%s/%s' % (TMP_DIR, priv), '%s/etc/ssh/%s'
+    deploy(proxmox_ssh, '%s/%s' % (custom_tmp_fd, priv), '%s/etc/ssh/%s'
            % (dst, priv), priv_key=True)
-    deploy(proxmox_ssh, '%s/%s' % (TMP_DIR, pub), '%s/etc/ssh/%s'
+    deploy(proxmox_ssh, '%s/%s' % (custom_tmp_fd, pub), '%s/etc/ssh/%s'
            % (dst, pub), pub_key=True)
     deploy(proxmox_ssh, '%s/authorized_keys' % STATIC_DIR,
            '/root/.ssh/authorized_keys', priv_key=True)
