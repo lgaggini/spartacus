@@ -18,7 +18,7 @@ from settings.settings import IMAGES_BASEPATH
 import rawinit
 import yaml
 import re
-from yaml_schema import vm_schema, VMDefValidator
+from yamlschema import vm_schema, VMDefValidator
 
 
 logger = logging.getLogger('spartacus')
