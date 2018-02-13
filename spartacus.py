@@ -312,6 +312,8 @@ if __name__ == '__main__':
         dst = '%s/%s' % (WORKING_MNT, newid)
         logger.debug(dst)
 
+        rawinit.rawinit(options, src, dst)
+
         # logger.debug(proxmox_api.getVirtualConfig(target_node, newid))
         # proxmox_api.startVirtualMachine(target_node, newid)
         logger.info("accendo la macchina")
