@@ -272,10 +272,12 @@ if __name__ == '__main__':
         logger.info("finita la clonazione")
         # config = b.getVirtualConfig(target_node,newid)['data']['net0']
         mod_conf = []
-        if (options['vlan'] is not None):
-            str = 'virtio=' + MACprettyprint(randomMAC()) +\
-                  ',bridge=vmbr' + options['vlan']
-            mod_conf.append(('net0', str))
+        for network in options['networks']:
+            if (network['vlan'] is not None):
+                str = 'virtio=' + MACprettyprint(randomMAC()) +\
+                      ',bridge=vmbr' + network['vlan']
+                mod_conf.append(('net0', str))
+                logger.debug(mod_conf)
         mod_conf.append(('memory', options['memory']))
         mod_conf.append(('cores', options['cores']))
         mod_conf.append(('sockets', options['sockets']))
