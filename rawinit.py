@@ -47,11 +47,11 @@ def template_compile(configs):
 
 
 def get_proxmox_ssh(proxmox):
-    logger.info('opening connection to %s' % proxmox['host'])
+    logger.info('opening connection to %s' % proxmox['SSH_HOST'])
     proxmox_ssh = SSHClient()
     proxmox_ssh.set_missing_host_key_policy(WarningPolicy())
-    proxmox_ssh.connect(PROXMOX['SSH_HOST'],
-                        username=PROXMOX['USER'].split('@')[0])
+    proxmox_ssh.connect(proxmox['SSH_HOST'],
+                        username=proxmox['USER'].split('@')[0])
     return proxmox_ssh
 
 
@@ -132,11 +132,11 @@ def generate_ssh_hostkeys(filename):
         f.write('%s %s' % (pub.get_name(), pub.get_base64()))
 
 
-def raw_init(configs, src, dst, dev=DEV, part='1'):
+def rawinit(configs, src, dst, dev=DEV, part='1'):
     log_init()
     template_compile(configs)
     try:
-        proxmox_ssh = get_proxmox_ssh(proxmox)
+        proxmox_ssh = get_proxmox_ssh(PROXMOX)
     except Exception, ex:
         logger.error('SSH exception: ' + str(ex))
         sys.exit('exiting')
@@ -173,12 +173,12 @@ def raw_init(configs, src, dst, dev=DEV, part='1'):
     logger.info('Unmounting of %s to %s by %s' % (src, dst, dev))
     check_exit(*image_umount(proxmox_ssh, dev, src, dst))
     logger.info('Image %s unmounted from %s by %s' % (src, dst, dev))
-    logger.info('Closing connection to %s' % proxmox['host'])
+    logger.info('Closing connection to %s' % PROXMOX['HOST'])
     proxmox_ssh.close()
-    logger.info('Connection to %s closed' % proxmox['host'])
+    logger.info('Connection to %s closed' % PROXMOX['HOST'])
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='raw-init')
-    raw_init(configs, src, dst)
+    rawinit(configs, src, dst)
     sys.exit(0)
