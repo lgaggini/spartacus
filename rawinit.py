@@ -27,7 +27,7 @@ configs['puppet.conf'] = 'base'
 src = '/home/lg/tmp/zesty-server-cloudimg-amd64.img'
 dst = '/mnt/vm_image'
 
-logger = logging.getLogger(rawinit)
+logger = logging.getLogger('rawinit')
 
 
 def log_init():
