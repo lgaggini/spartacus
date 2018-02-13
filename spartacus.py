@@ -14,7 +14,7 @@ import coloredlogs
 import argparse
 import socket
 from settings.settings import PROXMOX, VM_RESOURCES, VM_DEFAULTS, KVM_THRES
-from settings.settings import IMAGES_BASEPATH
+from settings.settings import IMAGES_BASEPATH, WORKING_MNT
 import rawinit
 import yaml
 import re
@@ -309,6 +309,8 @@ if __name__ == '__main__':
         src = '%s/%s/images/%s/%s' % (IMAGES_BASEPATH, storage, newid,
                                       newimage)
         logger.debug(src)
+        dst = '%s/%s' % (WORKING_MNT, newid)
+        logger.debug(dst)
 
         # logger.debug(proxmox_api.getVirtualConfig(target_node, newid))
         # proxmox_api.startVirtualMachine(target_node, newid)

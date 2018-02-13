@@ -83,9 +83,14 @@ def image_mount(ssh, dev, src, dst, part):
     command = 'sudo qemu-nbd -c %s %s' % (dev, src)
     exit, stdout, stderr = remote_command(ssh, command)
     if (exit == 0):
-        src_nbd = '%sp%s' % (dev, part)
-        command = 'sudo mount %s %s' % (src_nbd, dst)
-        return remote_command(ssh, command)
+        command = 'mkdir -p %s' % dst
+        exit, stdout, stderr = remote_command(ssh, command)
+        if (exit == 0):
+            src_nbd = '%sp%s' % (dev, part)
+            command = 'sudo mount %s %s' % (src_nbd, dst)
+            return remote_command(ssh, command)
+        else:
+            return 127, stdout, stderr
     else:
         return 127, stdout, stderr
 
