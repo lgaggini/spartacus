@@ -99,8 +99,13 @@ def image_umount(ssh, dev, src, dst):
     command = 'sudo umount %s' % dst
     exit, stdout, stderr = remote_command(ssh, command)
     if (exit == 0):
-        command = 'sudo qemu-nbd -d %s' % (dev)
-        return remote_command(ssh, command)
+        command = 'rmdir %s' % dst
+        exit, stdout, stderr = remote_command(ssh, command)
+        if (exit == 0):
+            command = 'sudo qemu-nbd -d %s' % (dev)
+            return remote_command(ssh, command)
+        else:
+            return 127, stdout, stderr
     else:
         return 127, stdout, stderr
 
