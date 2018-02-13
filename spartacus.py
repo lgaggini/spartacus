@@ -51,7 +51,8 @@ def getNFSVolume(connessione, name):
     m = re.search(r'\d+$', name)
     if m is not None:
         index = m.group()
-        if index % 2 == 0:
+        logger.debug(index)
+        if int(index) % 2 == 0:
             volume = VM_DEFAULTS['EVEN_VOL']
 
     storage = connessione.getNodeStorage(PROXMOX['HOST'].split('.')[0])
