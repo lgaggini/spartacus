@@ -20,7 +20,7 @@ import re
 from yaml_schema import vm_schema, VMDefValidator
 
 
-logger = logging.getLogger(__file__)
+logger = logging.getLogger('spartacus')
 
 
 def log_init():
