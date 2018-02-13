@@ -40,3 +40,12 @@ PROXMOX = {
     'USER': 'root@pam',
     'PASSWORD': 'password'
 }
+# templating settings
+TEMPLATE_MAP = {
+    'hostname': 'name',
+    'interfaces': 'interfaces',
+    'hosts': 'hosts',
+    'puppet.conf': 'env',
+    'pupuppetenvironment': 'env',
+    'serverfarm': 'farm'
+}

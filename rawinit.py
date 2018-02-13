@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 
 from settings.settings import PROXMOX, SSH_HOST_KEY, DEV, TMP_DIR, STATIC_DIR
+from settings.settings import TEMPLATE_MAP
 from paramiko import SSHClient, WarningPolicy
 from paramiko import RSAKey, ECDSAKey
 from jinja2 import Environment, FileSystemLoader
@@ -38,13 +39,11 @@ def log_init():
 def template_compile(configs):
     env = Environment(loader=FileSystemLoader('templates'))
 
-    config_keys = ['hostname', 'interfaces', 'hosts', 'puppet.conf',
-                   'pupuppetenvironment', 'serverfarm']
-
-    for config_key in config_keys:
+    for config_key in TEMPLATE_MAP.keys():
         j2_template = env.get_template('%s.j2' % config_key)
         with open('%s/%s' % (TMP_DIR, config_key), 'w') as config_file:
-            config_file.write(j2_template.render(var=configs[config_key]))
+            var = configs[TEMPLATE_MAP[config_key]]
+            config_file.write(j2_template.render(var=var))
 
 
 def get_proxmox_ssh(proxmox):
