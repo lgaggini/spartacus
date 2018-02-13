@@ -14,6 +14,7 @@ import coloredlogs
 import argparse
 import socket
 from settings.settings import PROXMOX, VM_RESOURCES, VM_DEFAULTS, KVM_THRES
+from settings.settings import IMAGES_BASEPATH
 import rawinit
 import yaml
 import re
@@ -303,8 +304,11 @@ if __name__ == '__main__':
         logger.debug(mod_conf)
         # proxmox_api.setVirtualMachineOptions(target_node, newid, mod_conf)
         logger.info("setto le opzioni")
-        # TODO: montare il volume della macchina e modificare hostname,
-        # hosts e conf di rete
+
+        newimage = 'vm-%s-disk-1.raw' % newid
+        src = '%s/%s/images/%s/%s' % (IMAGES_BASEPATH, storage, newid,
+                                      newimage)
+        logger.debug(src)
 
         # logger.debug(proxmox_api.getVirtualConfig(target_node, newid))
         # proxmox_api.startVirtualMachine(target_node, newid)

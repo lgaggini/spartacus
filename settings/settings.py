@@ -4,6 +4,7 @@ DEV = '/dev/nbd0'
 WORKING_DIR = '.'
 TMP_DIR = '%s/generated' % WORKING_DIR
 STATIC_DIR = '%s/static' % WORKING_DIR
+IMAGES_BASEPATH = '/mnt/pve'
 
 # vm options available
 VM_RESOURCES = {
