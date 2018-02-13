@@ -10,23 +10,6 @@ import logging
 import argparse
 import coloredlogs
 
-
-configs = {}
-configs['hostname'] = 'hostname'
-configs['interfaces'] = [{'vlan': '6', 'id': 'ens18', 'auto': True,
-                          'hotplug': True,
-                          'address': '192.168.0.15',
-                          'netmask': '255.255.248.0',
-                          'gateway': '192.168.0.1'}]
-configs['hosts'] = [{'ip_address': '192.168.0.15', 'fqdn': 'me.me',
-                     'alias': 'me'}]
-configs['pupuppetenvironment'] = 'base'
-configs['serverfarm'] = 'farm1'
-configs['puppet.conf'] = 'base'
-
-src = '/home/lg/tmp/zesty-server-cloudimg-amd64.img'
-dst = '/mnt/vm_image'
-
 logger = logging.getLogger('rawinit')
 
 
@@ -189,6 +172,42 @@ def rawinit(configs, src, dst, dev=DEV, part='1'):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='raw-init')
-    rawinit(configs, src, dst)
+
+    description = 'rawinit, customize a debian kvm disk image'
+    parser = argparse.ArgumentParser(description=description)
+
+    # TODO: read config from cli or other sources for standalone
+    # usage
+
+    configs = {
+        'name': 'myvm1',
+        'farm': 'farm1',
+        'env': 'base',
+        'interfaces': [
+            {
+                'vlan': '116',
+                'auto': True,
+                'hotplug': True,
+                'ipaddress': '172.20.16.20',
+                'netmask': '255.255.248.0',
+                'gateway': '172.20.16.1'
+            }
+        ],
+        'hosts': [
+            {
+                'ipaddress': '127.0.0.1',
+                'name': 'myvm1.domain.com',
+                'alias': 'myvm1'
+            }
+        ]
+    }
+
+    parser.add_argument('-s', '--source', required=True,
+                        help='the source image to customize')
+    parser.add_argument('-t', '--target', required=True,
+                        help='the mount point to use for customization')
+
+    cli_options = parser.parse_args()
+    rawinit(configs, cli_options.source, cli_options.target)
+
     sys.exit(0)
