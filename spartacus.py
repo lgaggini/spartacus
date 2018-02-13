@@ -294,6 +294,9 @@ if __name__ == '__main__':
                       ',bridge=vmbr' + interface['vlan']
                 mod_conf.append(('net0', str))
                 logger.debug(mod_conf)
+                interface['id'] = '%s%i' % (VM_DEFAULTS['STARTNIC'],
+                                            VM_DEFAULTS['STARTNICID']+i)
+                logger.debug(interface['id'])
         mod_conf.append(('memory', options['memory']))
         mod_conf.append(('cores', options['cores']))
         mod_conf.append(('sockets', options['sockets']))

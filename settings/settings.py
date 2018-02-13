@@ -30,7 +30,9 @@ VM_DEFAULTS = {
     'CORES': '2',
     'SOCKETS': '2',
     'RAM': '4096',
-    'FARM': 'farm1'
+    'FARM': 'farm1',
+    'STARTNIC': 'ens',
+    'STARTNICID': 18
 }
 
 # proxmox settings
@@ -40,6 +42,7 @@ PROXMOX = {
     'USER': 'root@pam',
     'PASSWORD': 'password'
 }
+
 # templating settings
 TEMPLATE_MAP = {
     'hostname': 'name',
