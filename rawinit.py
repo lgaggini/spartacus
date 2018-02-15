@@ -102,6 +102,12 @@ def image_umount(ssh, dev, src, dst):
         return 127, stdout, stderr
 
 
+def ssh_folder_init(ssh, dst):
+    cmd = 'mkdir -p %s/root/.ssh && chmod 0700 %s/root/.ssh' % (dst,
+                                                                dst)
+    exit, stdout, stderr = remote_command(ssh, cmd)
+
+
 def deploy(ssh, src, dst, priv_key=False, pub_key=False):
     logger.info('deploy %s to %s' % (src, dst))
     try:
@@ -171,8 +177,10 @@ def rawinit(configs, src, dst, dev=DEV, part='1'):
            % (dst, priv), priv_key=True)
     deploy(proxmox_ssh, '%s/%s' % (custom_tmp_fd, pub), '%s/etc/ssh/%s'
            % (dst, pub), pub_key=True)
+    logger.info('Creating the root .ssh folder')
+    ssh_folder_init(proxmox_ssh, dst)
     deploy(proxmox_ssh, '%s/authorized_keys' % STATIC_DIR,
-           '/root/.ssh/authorized_keys', priv_key=True)
+           '%s/root/.ssh/authorized_keys' % dst, priv_key=True)
     logger.info('Config deployed')
     logger.info('Unmounting of %s to %s by %s' % (src, dst, dev))
     check_exit(*image_umount(proxmox_ssh, dev, src, dst))
