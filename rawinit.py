@@ -72,7 +72,7 @@ def nbd_module(ssh):
 
 
 def image_mount(ssh, dev, src, dst, part):
-    command = 'sudo qemu-nbd -c %s %s' % (dev, src)
+    command = 'sudo qemu-nbd -f raw -c %s %s' % (dev, src)
     exit, stdout, stderr = remote_command(ssh, command)
     if (exit == 0):
         command = 'mkdir -p %s' % dst
