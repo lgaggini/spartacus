@@ -276,24 +276,22 @@ if __name__ == '__main__':
                     %s (id %s) sul nodo %s utilizzando lo storage %s' %
                     (name, newid, vm_name, vmid, target_node,
                      storage))
-        # proxmox_api.cloneVirtualMachine(node, vmid, install)
+        proxmox_api.cloneVirtualMachine(target_node, vmid, install)
         logger.info("inizio la clonazione")
 
-        # while True:
-        #    if proxmox_api.getVirtualStatus(target_node, newid)['status']['ok']\
-        #       is True:
-        #        break
-        #    logger.info("aspetto altri 5 secondi")
-        #    time.sleep(5)
+        while True:
+            vstatus = proxmox_api.getVirtualStatus(target_node, newid)
+            if vstatus['status']['ok'] is True:
+                break
+            logger.info("aspetto altri 5 secondi")
+            time.sleep(5)
 
-        logger.info("finita la clonazione")
-        # config = b.getVirtualConfig(target_node,newid)['data']['net0']
         mod_conf = []
         for i, interface in enumerate(options['interfaces']):
             if (interface['vlan'] is not None):
                 str = 'virtio=' + MACprettyprint(randomMAC()) +\
                       ',bridge=vmbr' + interface['vlan']
-                mod_conf.append(('net0', str))
+                mod_conf.append(('net%s' % i, str))
                 logger.debug(mod_conf)
                 interface['id'] = '%s%i' % (VM_DEFAULTS['STARTNIC'],
                                             VM_DEFAULTS['STARTNICID']+i)
@@ -302,7 +300,9 @@ if __name__ == '__main__':
         mod_conf.append(('cores', options['cores']))
         mod_conf.append(('sockets', options['sockets']))
         logger.debug(mod_conf)
-        # proxmox_api.setVirtualMachineOptions(target_node, newid, mod_conf)
+        time.sleep(30)
+        logger.info("finita la clonazione")
+        proxmox_api.setVirtualMachineOptions(target_node, newid, mod_conf)
         logger.info("setto le opzioni")
 
         newimage = 'vm-%s-disk-1.raw' % newid
@@ -314,8 +314,8 @@ if __name__ == '__main__':
 
         rawinit.rawinit(options, src, dst)
 
-        # logger.debug(proxmox_api.getVirtualConfig(target_node, newid))
-        # proxmox_api.startVirtualMachine(target_node, newid)
+        logger.debug(proxmox_api.getVirtualConfig(target_node, newid))
+        proxmox_api.startVirtualMachine(target_node, newid)
         logger.info("accendo la macchina")
     else:
         logger.error("impossibile trovare il template %s" % (vm_name))
