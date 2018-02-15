@@ -15,9 +15,10 @@ auto {{ item.id }}
 {% if item.hotplug -%}
 allow-hotplug {{ item.id }}
 {% endif  -%}
-address {{ item.ipaddress }}
-netmask {{ item.netmask }}
+iface {{ item.id }} inet static
+    address {{ item.ipaddress }}
+    netmask {{ item.netmask }}
 {% if item.gateway is defined -%}
-gateway {{ item.gateway }}
+    gateway {{ item.gateway }}
 {% endif  -%}
 {% endfor %}
