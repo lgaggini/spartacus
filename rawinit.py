@@ -66,12 +66,15 @@ def check_exit(exit, stdout, stderr, block=True):
 
 
 def nbd_module(ssh):
+    """ load the nbd kernel module """
     logger.info('modprobe of nbd module')
     command = 'sudo modprobe nbd'
     return remote_command(ssh, command)
 
 
 def image_mount(ssh, dev, src, dst, part):
+    """ create a custom mountpoint and mount a qemu
+    supported image by nbd """
     command = 'sudo qemu-nbd -f raw -c %s %s' % (dev, src)
     exit, stdout, stderr = remote_command(ssh, command)
     if (exit == 0):
@@ -88,6 +91,8 @@ def image_mount(ssh, dev, src, dst, part):
 
 
 def image_umount(ssh, dev, src, dst):
+    """ umount a qemu mounted image by nbd
+    and remove custom mountpoint """
     double_check_path(dst, WORKING_MNT)
     command = 'sudo umount %s' % dst
     exit, stdout, stderr = remote_command(ssh, command)
@@ -104,6 +109,7 @@ def image_umount(ssh, dev, src, dst):
 
 
 def check_mount(ssh, dev, src, dst):
+    """ check if the target mount is mounted """
     command = 'mount | grep -q %s' % dst
     exit, stdout, stderr = remote_command(ssh, command)
     if exit == 0:
@@ -115,12 +121,15 @@ def check_mount(ssh, dev, src, dst):
 
 
 def ssh_folder_init(ssh, dst):
+    """ create and set permission for the user .ssh folder """
     cmd = 'mkdir -p %s/root/.ssh && chmod 0700 %s/root/.ssh' % (dst,
                                                                 dst)
     exit, stdout, stderr = remote_command(ssh, cmd)
 
 
 def deploy(ssh, src, dst, priv_key=False, pub_key=False):
+    """ deploys the src file on dst wit some special managemente for
+    ssh keys """
     logger.info('deploy %s to %s' % (src, dst))
     if(not double_check_path(dst, WORKING_MNT)):
         return
@@ -147,6 +156,7 @@ def deploy(ssh, src, dst, priv_key=False, pub_key=False):
 
 
 def generate_ssh_hostkeys(filename):
+    """ generate RSA host keys """
     prv = RSAKey.generate(bits=2048, progress_func=None)
     prv.write_private_key_file(filename=filename)
     pub = RSAKey(filename=filename)
@@ -155,6 +165,7 @@ def generate_ssh_hostkeys(filename):
 
 
 def double_check_hostname(ssh, dst, expected):
+    """ check if the hostname of the mounted images is consistent """
     command = 'cat %s/etc/hostname' % dst
     exit, hostname, stderr = remote_command(ssh, command)
     check_exit(exit, hostname, stderr)
@@ -168,6 +179,8 @@ def double_check_hostname(ssh, dst, expected):
 
 
 def double_check_path(dst, mnt):
+    """ check if destination path is on the expected mountpoint to
+    prevent deploy on the host """
     if mnt not in dst:
         logger.error('trying to deploy on %s, out of the mountpoint %s'
                      % (dst, mnt))

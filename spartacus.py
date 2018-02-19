@@ -31,6 +31,7 @@ def log_init():
 
 
 def randomMAC():
+    """ generate a random mac address """
     return [0x00,
             random.randint(0x00, 0x7f),
             random.randint(0x00, 0x7f),
@@ -44,8 +45,8 @@ def MACprettyprint(mac):
 
 
 def getNFSVolume(connessione, name):
-    """prende il volume attivo pveXX in base all indice della
-    macchina e controlla lo spazio disponibile"""
+    """ choose the storage volume based on vm index and check
+    for available space """
 
     volume = VM_DEFAULTS['ODD_VOL']
 
@@ -72,9 +73,8 @@ def getNFSVolume(connessione, name):
 
 
 def findTemplate(connessione, vmname):
-    """ dato il nome del template (vmname) ritorna """
-    """ su quale nodo kvm si trova e qual e' l'id """
-    """ se non trova niente ritorna None, None """
+    """ look for the provided template and return id and
+    location """
     nodes = connessione.getClusterNodeList()
     for node in nodes['data']:
         n = node['node']
@@ -87,7 +87,7 @@ def findTemplate(connessione, vmname):
 
 
 def getAvailableNode(connessione, memory):
-    """calcola qual e' la macchina piu' scarica"""
+    """choose the host wit more resources available"""
     d = {}
     nodes = connessione.getClusterNodeList()
     for node in nodes['data']:
@@ -116,6 +116,7 @@ def getAvailableNode(connessione, memory):
 
 
 def valid_ip_address(ip_address):
+    """ custom parser validator for ip address """
     try:
         socket.inet_aton(ip_address)
         return ip_address
@@ -125,6 +126,7 @@ def valid_ip_address(ip_address):
 
 
 def valid_netmask(netmask):
+    """ custom argparse validator for netmask """
     valid_ip_address(netmask)
     seen0 = False
     for x in netmask.split('.'):
@@ -140,6 +142,7 @@ def valid_netmask(netmask):
 
 
 def valid_yaml_inventory(yaml_inventory):
+    """ custom argparse validator for input file """
     if not os.path.exists(yaml_inventory):
         parser.error("the file %s does not exist!" % arg)
     else:
@@ -147,6 +150,7 @@ def valid_yaml_inventory(yaml_inventory):
 
 
 def valid_yaml_schema(yaml, schema):
+    """ validator for the yaml inventory """
     validator = VMDefValidator(schema)
     logger.debug(yaml)
     normalized_yaml = validator.normalized(yaml)
@@ -155,6 +159,7 @@ def valid_yaml_schema(yaml, schema):
 
 
 def yaml_parse(path, schema):
+    """ yaml parser of the inventory file """
     with open(path, 'r') as yaml_stream:
         try:
             options = yaml.safe_load(yaml_stream)
