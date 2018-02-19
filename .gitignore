@@ -107,3 +107,4 @@ venv.bak/
 # dynamic generated files
 generated/*
 static/*
+hostbooks/*
