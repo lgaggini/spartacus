@@ -185,18 +185,18 @@ def rawinit(configs, src, dst, dev=DEV, part='1'):
         logger.error('SSH exception: ' + str(ex))
         sys.exit('exiting')
 
-    logger.info('Modprobing of nbd module')
+    logger.info('modprobing of nbd module')
     check_exit(*nbd_module(proxmox_ssh))
     logger.info("nbd module modprobed")
     if check_mount(proxmox_ssh, dev, src, dst):
-        logger.info('Mountpoint %s busy, unmounting it' % dst)
+        logger.info('mountpoint %s busy, unmounting it' % dst)
         image_umount(proxmox_ssh, dev, src, dst)
-    logger.info('Mounting %s to %s by %s' % (src, dst, dev))
+    logger.info('mounting %s to %s by %s' % (src, dst, dev))
     check_exit(*image_mount(proxmox_ssh, dev, src, dst, part))
-    logger.info('Image %s mounted to %s by %sp%s' % (src, dst, dev, part))
+    logger.info('image %s mounted to %s by %sp%s' % (src, dst, dev, part))
     if (not double_check_hostname(proxmox_ssh, dst, configs['template'])):
         check_exit(*image_umount(proxmox_ssh, dev, src, dst))
-    logger.info('Deploy configurations')
+    logger.info('deploy configurations')
     custom_tmp_fd = '%s/%s' % (TMP_DIR, configs['name'])
     deploy(proxmox_ssh, '%s/interfaces' % custom_tmp_fd,
            '%s/etc/network/interfaces' % dst)
@@ -208,26 +208,26 @@ def rawinit(configs, src, dst, dev=DEV, part='1'):
     deploy(proxmox_ssh, '%s/hosts' % custom_tmp_fd, '%s/etc/hosts' % dst)
     deploy(proxmox_ssh, '%s/puppet.conf' % custom_tmp_fd,
            '%s/etc/puppet/puppet.conf' % dst)
-    logger.info('Generate and deploy tmp RSA 2048 bit host keys')
+    logger.info('generate and deploy tmp RSA 2048 bit host keys')
     generate_ssh_hostkeys('%s/%s' % (custom_tmp_fd, SSH_HOST_KEY))
-    logger.info('Generated tmp RSA 2048 bit host keys for first ssh access')
+    logger.info('generated tmp RSA 2048 bit host keys for first ssh access')
     priv = '%s' % SSH_HOST_KEY
     pub = '%s.pub' % SSH_HOST_KEY
     deploy(proxmox_ssh, '%s/%s' % (custom_tmp_fd, priv), '%s/etc/ssh/%s'
            % (dst, priv), priv_key=True)
     deploy(proxmox_ssh, '%s/%s' % (custom_tmp_fd, pub), '%s/etc/ssh/%s'
            % (dst, pub), pub_key=True)
-    logger.info('Creating the root .ssh folder')
+    logger.info('creating the root .ssh folder')
     ssh_folder_init(proxmox_ssh, dst)
     deploy(proxmox_ssh, '%s/authorized_keys' % STATIC_DIR,
            '%s/root/.ssh/authorized_keys' % dst, priv_key=True)
-    logger.info('Config deployed')
-    logger.info('Unmounting of %s to %s by %s' % (src, dst, dev))
+    logger.info('config deployed')
+    logger.info('unmounting of %s to %s by %s' % (src, dst, dev))
     check_exit(*image_umount(proxmox_ssh, dev, src, dst))
-    logger.info('Image %s unmounted from %s by %s' % (src, dst, dev))
-    logger.info('Closing connection to %s' % PROXMOX['SSH_HOST'])
+    logger.info('image %s unmounted from %s by %s' % (src, dst, dev))
+    logger.info('closing connection to %s' % PROXMOX['SSH_HOST'])
     proxmox_ssh.close()
-    logger.info('Connection to %s closed' % PROXMOX['SSH_HOST'])
+    logger.info('connection to %s closed' % PROXMOX['SSH_HOST'])
 
 
 if __name__ == '__main__':
