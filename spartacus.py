@@ -64,7 +64,7 @@ def getNFSVolume(connessione, name):
             avail = s['avail']
             logger.debug(avail)
             if avail <= KVM_THRES['SPACE']:
-                logger.error('Available space %s is under the minimum allowed (%s) on \
+                logger.error('available space %s is under the minimum allowed (%s) on \
                               %s' % (avail, KVM_THRES['SPACE'], volume))
                 sys.exit('exiting')
 
@@ -111,7 +111,7 @@ def getAvailableNode(connessione, memory):
         if node_stat[1]['magic'] >= KVM_THRES['MAGIC'] and\
            node_stat[1]['freeram'] > int(memory) + KVM_THRES['MEMORY']:
             return node_stat[0]
-    logger.error("Impossible trovare una macchina con risorse sufficienti")
+    logger.error("no host with available resources found")
     sys.exit('exiting')
 
 
@@ -141,7 +141,7 @@ def valid_netmask(netmask):
 
 def valid_yaml_inventory(yaml_inventory):
     if not os.path.exists(yaml_inventory):
-        parser.error("The file %s does not exist!" % arg)
+        parser.error("the file %s does not exist!" % arg)
     else:
         return yaml_inventory
 
@@ -242,48 +242,48 @@ if __name__ == '__main__':
 
     logger.debug(options)
 
-    logger.info("mi connetto")
+    logger.info('connecting to %s' % PROXMOX['HOST'])
     auth = prox_auth(PROXMOX['HOST'], PROXMOX['USER'], PROXMOX['PASSWORD'])
     proxmox_api = pyproxmox(auth)
 
     vm_name = options['template']
     name = options['name']
     description = options['description']
-    logger.info("cerco il template")
+    logger.info('looking for the template %s' % vm_name)
     if options['templateid'] is None or\
        options['template'] != VM_DEFAULTS['TEMPLATE']:
         vmid, node = findTemplate(proxmox_api, vm_name)
     else:
         vmid = options['templateid']
-    logger.info("ho trovato il template %s, vmid %s"
+    logger.info('template %s, vmid %s found'
                 % (options['template'], vmid))
 
     if (vmid is not None):
         # prende il primo id disponibile
         newid = proxmox_api.getClusterVmNextId()['data']
 
-        logger.info('ho trovato il VmNextId: %s' % newid)
+        logger.info('VmNextId: %s found' % newid)
         target_node = getAvailableNode(proxmox_api, options['memory'])
-        logger.info("ho trovato il nodo disponibile: %s" % target_node)
+        logger.info('available node: %s found' % target_node)
         storage = getNFSVolume(proxmox_api, options['name'])
-        logger.info("ho trovato lo storage: %s" % storage)
+        logger.info('storage: %s found' % storage)
 
         # installa una macchina clonando il template
         install = [('newid', newid), ('name', name), ('full', 1),
                    ('format', 'raw'), ('storage', storage),
                    ('target', target_node), ('description', description)]
-        logger.info('installo la macchina %s (id %s)' % (name, newid))
-        logger.info('clonando il template %s (id %s) sul nodo %s' %
+        logger.info('installing the vm %s (id %s)' % (name, newid))
+        logger.info('cloning template %s (id %s) on node %s' %
                     (vm_name, vmid, target_node))
-        logger.info('utilizzando lo storage %s' % storage)
+        logger.info('using storage %s' % storage)
         proxmox_api.cloneVirtualMachine(target_node, vmid, install)
-        logger.info("inizio la clonazione")
+        logger.info('starting the clone')
 
         while True:
             vstatus = proxmox_api.getVirtualStatus(target_node, newid)
             if vstatus['status']['ok'] is True:
                 break
-            logger.info("aspetto altri 5 secondi")
+            logger.info('waiting 5 seconds')
             time.sleep(5)
 
         mod_conf = []
@@ -301,9 +301,9 @@ if __name__ == '__main__':
         mod_conf.append(('sockets', options['sockets']))
         logger.debug(mod_conf)
         time.sleep(30)
-        logger.info("finita la clonazione")
+        logger.info('clone end')
         proxmox_api.setVirtualMachineOptions(target_node, newid, mod_conf)
-        logger.info("setto le opzioni")
+        logger.info('options settings')
 
         newimage = 'vm-%s-disk-1.raw' % newid
         src = '%s/%s/images/%s/%s' % (IMAGES_BASEPATH, storage, newid,
@@ -316,7 +316,8 @@ if __name__ == '__main__':
 
         logger.debug(proxmox_api.getVirtualConfig(target_node, newid))
         proxmox_api.startVirtualMachine(target_node, newid)
-        logger.info("accendo la macchina")
+        logger.info('starting the vm %s (id %s) on node %s' %
+                    (name, newid, target_node))
     else:
-        logger.error("impossibile trovare il template %s" % (vm_name))
+        logger.error('unable to found template %s' % (vm_name))
         sys.exit(2)
