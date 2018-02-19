@@ -29,6 +29,7 @@ VM_DEFAULTS = {
     'EVEN_VOL': 'pve04',
     'TEMPLATE': 'masterdebian9',
     'TEMPLATEID': '694',
+    'TEMPLATENODE': 'kvm',
     'CORES': '2',
     'SOCKETS': '2',
     'RAM': '4096',
