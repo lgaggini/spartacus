@@ -260,6 +260,7 @@ if __name__ == '__main__':
         vmid, node = findTemplate(proxmox_api, vm_name)
     else:
         vmid = options['templateid']
+        node = VM_DEFAULTS['TEMPLATENODE']
     logger.info('template %s, vmid %s found'
                 % (options['template'], vmid))
 
@@ -281,7 +282,7 @@ if __name__ == '__main__':
         logger.info('cloning template %s (id %s) on node %s' %
                     (vm_name, vmid, target_node))
         logger.info('using storage %s' % storage)
-        proxmox_api.cloneVirtualMachine(target_node, vmid, install)
+        proxmox_api.cloneVirtualMachine(node, vmid, install)
         logger.info('starting the clone')
 
         while True:
