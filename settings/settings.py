@@ -10,7 +10,7 @@ IMAGES_BASEPATH = '/mnt/pve'
 # vm options available
 VM_RESOURCES = {
     'VLANS': ['6', '116'],
-    'RAM': ['128', '256', '512', '1024', '2048', '4096'],
+    'RAM': ['128', '256', '512', '1024', '2048', '4096', '8192'],
     'CORES': ['1', '2', '4', '8', '16'],
     'SOCKETS': ['1', '2', '4', '8', '16'],
     'FARMS': ['farm1', 'farm2', 'farm3']
