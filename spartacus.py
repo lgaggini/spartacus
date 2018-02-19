@@ -272,10 +272,10 @@ if __name__ == '__main__':
         install = [('newid', newid), ('name', name), ('full', 1),
                    ('format', 'raw'), ('storage', storage),
                    ('target', target_node), ('description', description)]
-        logger.info('installo la macchina %s (id %s) clonando il template\
-                    %s (id %s) sul nodo %s utilizzando lo storage %s' %
-                    (name, newid, vm_name, vmid, target_node,
-                     storage))
+        logger.info('installo la macchina %s (id %s)' % (name, newid))
+        logger.info('clonando il template %s (id %s) sul nodo %s' %
+                    (vm_name, vmid, target_node))
+        logger.info('utilizzando lo storage %s' % storage)
         proxmox_api.cloneVirtualMachine(target_node, vmid, install)
         logger.info("inizio la clonazione")
 

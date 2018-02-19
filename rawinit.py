@@ -167,8 +167,7 @@ def rawinit(configs, src, dst, dev=DEV, part='1'):
     deploy(proxmox_ssh, '%s/hosts' % custom_tmp_fd, '%s/etc/hosts' % dst)
     deploy(proxmox_ssh, '%s/puppet.conf' % custom_tmp_fd,
            '%s/etc/puppet/puppet.conf' % dst)
-    logger.info('Generate and deploy tmp RSA 2048 bit host keys for \
-                first ssh access')
+    logger.info('Generate and deploy tmp RSA 2048 bit host keys')
     generate_ssh_hostkeys('%s/%s' % (custom_tmp_fd, SSH_HOST_KEY))
     logger.info('Generated tmp RSA 2048 bit host keys for first ssh access')
     priv = '%s' % SSH_HOST_KEY
