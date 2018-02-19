@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 
 from settings.settings import PROXMOX, SSH_HOST_KEY, DEV, TMP_DIR, STATIC_DIR
-from settings.settings import TEMPLATE_MAP
+from settings.settings import TEMPLATE_MAP, WORKING_MNT
 from paramiko import SSHClient, WarningPolicy
 from paramiko import RSAKey, ECDSAKey
 from jinja2 import Environment, FileSystemLoader
@@ -88,6 +88,7 @@ def image_mount(ssh, dev, src, dst, part):
 
 
 def image_umount(ssh, dev, src, dst):
+    double_check_path(dst, WORKING_MNT)
     command = 'sudo umount %s' % dst
     exit, stdout, stderr = remote_command(ssh, command)
     if (exit == 0):
@@ -102,6 +103,17 @@ def image_umount(ssh, dev, src, dst):
         return 127, stdout, stderr
 
 
+def check_mount(ssh, dev, src, dst):
+    command = 'mount | grep -q %s' % dst
+    exit, stdout, stderr = remote_command(ssh, command)
+    if exit == 0:
+        logger.debug('%s is just mounted' % dst)
+        return True
+    else:
+        logger.debug('%s is not mounted' % dst)
+        return False
+
+
 def ssh_folder_init(ssh, dst):
     cmd = 'mkdir -p %s/root/.ssh && chmod 0700 %s/root/.ssh' % (dst,
                                                                 dst)
@@ -110,6 +122,8 @@ def ssh_folder_init(ssh, dst):
 
 def deploy(ssh, src, dst, priv_key=False, pub_key=False):
     logger.info('deploy %s to %s' % (src, dst))
+    if(not double_check_path(dst, WORKING_MNT)):
+        return
     try:
         proxmox_sftp = ssh.open_sftp()
     except Exception, ex:
@@ -140,6 +154,28 @@ def generate_ssh_hostkeys(filename):
         f.write('%s %s' % (pub.get_name(), pub.get_base64()))
 
 
+def double_check_hostname(ssh, dst, expected):
+    command = 'cat %s/etc/hostname' % dst
+    exit, hostname, stderr = remote_command(ssh, command)
+    check_exit(exit, hostname, stderr)
+    if hostname.strip() != expected:
+        logger.error('the mount image on %s doesnt have the expected hostname'
+                     % dst)
+        logger.error('expected: %s, found: %s' % (expected, hostname))
+        return False
+    else:
+        return True
+
+
+def double_check_path(dst, mnt):
+    if mnt not in dst:
+        logger.error('trying to deploy on %s, out of the mountpoint %s'
+                     % (dst, mnt))
+        return False
+    else:
+        return True
+
+
 def rawinit(configs, src, dst, dev=DEV, part='1'):
     log_init()
     template_compile(configs)
@@ -152,9 +188,14 @@ def rawinit(configs, src, dst, dev=DEV, part='1'):
     logger.info('Modprobing of nbd module')
     check_exit(*nbd_module(proxmox_ssh))
     logger.info("nbd module modprobed")
+    if check_mount(proxmox_ssh, dev, src, dst):
+        logger.info('Mountpoint %s busy, unmounting it' % dst)
+        image_umount(proxmox_ssh, dev, src, dst)
     logger.info('Mounting %s to %s by %s' % (src, dst, dev))
     check_exit(*image_mount(proxmox_ssh, dev, src, dst, part))
     logger.info('Image %s mounted to %s by %sp%s' % (src, dst, dev, part))
+    if (not double_check_hostname(proxmox_ssh, dst, configs['template'])):
+        check_exit(*image_umount(proxmox_ssh, dev, src, dst))
     logger.info('Deploy configurations')
     custom_tmp_fd = '%s/%s' % (TMP_DIR, configs['name'])
     deploy(proxmox_ssh, '%s/interfaces' % custom_tmp_fd,
