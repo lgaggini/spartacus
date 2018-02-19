@@ -25,8 +25,8 @@ KVM_THRES = {
 
 # vm defaults
 VM_DEFAULTS = {
-    'ODD_VOL': 'pve03',
-    'EVEN_VOL': 'pve04',
+    'ODD_VOL': 'vol01',
+    'EVEN_VOL': 'vol02',
     'TEMPLATE': 'masterdebian9',
     'TEMPLATEID': '694',
     'TEMPLATENODE': 'kvm',
@@ -41,7 +41,7 @@ VM_DEFAULTS = {
 # proxmox settings
 PROXMOX = {
     'HOST': 'kvm.domain',
-    'SSH_HOST': 'localhost',
+    'SSH_HOST': 'kvm.domain',
     'USER': 'root@pam',
     'PASSWORD': 'password'
 }
