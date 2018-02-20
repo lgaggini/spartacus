@@ -144,7 +144,8 @@ def valid_netmask(netmask):
 def valid_yaml_inventory(yaml_inventory):
     """ custom argparse validator for input file """
     if not os.path.exists(yaml_inventory):
-        parser.error("the file %s does not exist!" % arg)
+        raise arparse.ArgumentTypeError('the file %s does not exist!'
+                                        % yaml_inventory)
     else:
         return yaml_inventory
 
