@@ -52,6 +52,6 @@ TEMPLATE_MAP = {
     'interfaces': 'interfaces',
     'hosts': 'hosts',
     'puppet.conf': 'env',
-    'pupuppetenvironment': 'env',
+    'pu_puppetenvironment': 'env',
     'serverfarm': 'farm'
 }

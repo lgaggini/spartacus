@@ -216,8 +216,8 @@ def rawinit(configs, src, dst, dev=DEV, part='1'):
     deploy(proxmox_ssh, '%s/hostname' % custom_tmp_fd, '%s/etc/hostname' % dst)
     deploy(proxmox_ssh, '%s/serverfarm' % custom_tmp_fd,
            '%s/etc/serverfarm' % dst)
-    deploy(proxmox_ssh, '%s/pupuppetenvironment' % custom_tmp_fd,
-           '%s/etc/pupuppetenvironment' % dst)
+    deploy(proxmox_ssh, '%s/pu_puppetenvironment' % custom_tmp_fd,
+           '%s/etc/pu_puppetenvironment' % dst)
     deploy(proxmox_ssh, '%s/hosts' % custom_tmp_fd, '%s/etc/hosts' % dst)
     deploy(proxmox_ssh, '%s/puppet.conf' % custom_tmp_fd,
            '%s/etc/puppet/puppet.conf' % dst)
