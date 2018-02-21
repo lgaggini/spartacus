@@ -15,12 +15,14 @@ logger = logging.getLogger('rawinit')
 
 
 def log_init():
+    """ initialize the logging system """
     FORMAT = '%(asctime)s %(levelname)s %(module)s %(message)s'
     logging.basicConfig(format=FORMAT, level=logging.INFO)
     coloredlogs.install(level='INFO')
 
 
 def template_compile(configs):
+    """ compile jinja template """
     env = Environment(loader=FileSystemLoader('templates'))
 
     custom_tmp_fd = '%s/%s' % (TMP_DIR, configs['name'])
@@ -39,6 +41,7 @@ def template_compile(configs):
 
 
 def get_proxmox_ssh(proxmox):
+    """ get a ssh connection to proxmox """
     logger.info('opening connection to %s' % proxmox['SSH_HOST'])
     proxmox_ssh = SSHClient()
     proxmox_ssh.set_missing_host_key_policy(WarningPolicy())
@@ -48,6 +51,7 @@ def get_proxmox_ssh(proxmox):
 
 
 def remote_command(ssh, command):
+    """ execute a remote command by the ssh connection """
     stdin, stdout, stderr = ssh.exec_command(command)
     stdout_str = ' ,'.join(stdout.readlines())
     stderr_str = ' ,'.join(stderr.readlines())
@@ -57,6 +61,8 @@ def remote_command(ssh, command):
 
 
 def check_exit(exit, stdout, stderr, block=True):
+    """ check the exit code and if not 0 log stderror and exit
+    (if blocking command) """
     if exit == 0:
         return
     else:
