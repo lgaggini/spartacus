@@ -28,11 +28,12 @@ You can use spartacus passing arguments by command line or in an infrastructure 
 The yaml inventory file is validated against a yaml schema.
 
 ```
-usage: spartacus.py [-h] [-t TEMPLATE] [--templateid TEMPLATEID] [-n NAME]
-                    [-i INVENTORY] [-d DESCRIPTION] [--vlan {6,116}] [--auto]
-                    [--hot] [--ipaddress IPADDRESS] [--netmask NETMASK]
-                    [--gateway GATEWAY] [-m {128,256,512,1024,2048,4096,8192}]
-                    [-c {1,2,4,8,16}] [-s {1,2,4,8,16}]
+usage: spartacus.py [-h] [-t TEMPLATE] [--templateid TEMPLATEID] [--vmid VMID]
+                    [-n NAME] [-i INVENTORY] [-d DESCRIPTION] [--vlan {6,116}]
+                    [--auto] [--hot] [--ipaddress IPADDRESS]
+                    [--netmask NETMASK] [--gateway GATEWAY]
+                    [-m {128,256,512,1024,2048,4096,8192}] [-c {1,2,4,8,16}]
+                    [-s {1,2,4,8,16}]
                     [-f {farm1,farm2,farm3}]
                     [-e ENV]
 
@@ -43,7 +44,8 @@ optional arguments:
   -t TEMPLATE, --template TEMPLATE
                         Name of template to clone (default masterdebian9)
   --templateid TEMPLATEID
-                        id of the template to clone (default 694)
+                        id of the template to clone (default 100)
+  --vmid VMID           the vmid for the new vm
   -n NAME, --name NAME  Name of new virtual machines
   -i INVENTORY, --inventory INVENTORY
                         Yaml file path to read
@@ -66,6 +68,7 @@ optional arguments:
   -f {farm1,farm2,farm3}, --farm {farm1,farm2,farm3}
                         farm for puppet
   -e ENV, --env ENV     environment for puppet
+
 ```
 
 ## Inventory schema
@@ -126,6 +129,7 @@ vm_schema = {
     'template': {'type': 'string', 'default': VM_DEFAULTS['TEMPLATE']},
     'templateid': {'type': 'string', 'default': VM_DEFAULTS['TEMPLATEID']},
     'name': {'required': True, 'type': 'string'},
+    'vmid': {'type': 'string', 'default': 'auto'},
     'description': {'type': 'string'},
     'hosts': hosts_schema,
     'sockets': {'type': 'string', 'allowed': VM_RESOURCES['SOCKETS'],
@@ -146,6 +150,7 @@ vm_schema = {
 ---$                                                                                                                                                                                                                
 template: masterdebian9
 name: spartacus01
+vmid: '101'
 description: spartacus01
 hosts:
     - ipaddress: 172.20.16.110
