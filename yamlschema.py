@@ -61,6 +61,7 @@ vm_schema = {
     'template': {'type': 'string', 'default': VM_DEFAULTS['TEMPLATE']},
     'templateid': {'type': 'string', 'default': VM_DEFAULTS['TEMPLATEID']},
     'name': {'required': True, 'type': 'string'},
+    'vmid': {'type': 'string', 'default': 'auto'},
     'description': {'type': 'string'},
     'hosts': hosts_schema,
     'sockets': {'type': 'string', 'allowed': VM_RESOURCES['SOCKETS'],
@@ -97,3 +98,11 @@ class VMDefValidator(Validator):
                 else:
                     seen0 = True
         return True
+
+    def _validate_vmid(self, value):
+        if value == 'auto':
+            return True
+        elif int(value) < 1000:
+            return True
+        else:
+            return False

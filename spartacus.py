@@ -159,6 +159,14 @@ def valid_yaml_schema(yaml, schema):
     return normalized_yaml, isvalid, validator.errors
 
 
+def valid_vmid(vmid):
+    """ validator for the proxmox vmid """
+    if not vmid == 'auto' and int(vmid) > 999:
+        raise argparse.ArgumentTypeError('invalid vmid: %s' % vmid)
+    else:
+        return vmid
+
+
 def yaml_parse(path, schema):
     """ yaml parser of the inventory file """
     with open(path, 'r') as yaml_stream:
@@ -189,6 +197,8 @@ if __name__ == '__main__':
     parser.add_argument('--templateid', default=VM_DEFAULTS['TEMPLATEID'],
                         help='id of the template to clone \
                         (default %s)' % VM_DEFAULTS['TEMPLATEID'])
+    parser.add_argument('--vmid', default='auto', type=valid_vmid,
+                        help='the vmid for the new vm')
     parser.add_argument('-n', '--name', default=None,
                         help='Name of new virtual machines')
     parser.add_argument('-i', '--inventory', default=None,
@@ -259,18 +269,23 @@ if __name__ == '__main__':
     logger.info('looking for the template %s' % vm_name)
     if options['templateid'] is None or\
        options['template'] != VM_DEFAULTS['TEMPLATE']:
-        vmid, node = findTemplate(proxmox_api, vm_name)
+        tid, node = findTemplate(proxmox_api, vm_name)
     else:
-        vmid = options['templateid']
+        tid = options['templateid']
         node = VM_DEFAULTS['TEMPLATENODE']
-    logger.info('template %s, vmid %s found'
-                % (options['template'], vmid))
+    logger.info('template %s, tid %s found'
+                % (options['template'], tid))
 
-    if (vmid is not None):
-        # prende il primo id disponibile
-        newid = proxmox_api.getClusterVmNextId()['data']
+    if (tid is not None):
+
+        if 'auto' in options['vmid']:
+            # prende il primo id disponibile
+            newid = check_proxmox_response(proxmox_api.getClusterVmNextId()['data'])
+        else:
+            newid = options['vmid']
 
         logger.info('VmNextId: %s found' % newid)
+
         target_node = getAvailableNode(proxmox_api, options['memory'])
         logger.info('available node: %s found' % target_node)
         storage = getNFSVolume(proxmox_api, options['name'])
@@ -282,7 +297,7 @@ if __name__ == '__main__':
                    ('target', target_node), ('description', description)]
         logger.info('installing the vm %s (id %s)' % (name, newid))
         logger.info('cloning template %s (id %s) on node %s' %
-                    (vm_name, vmid, target_node))
+                    (vm_name, tid, target_node))
         logger.info('using storage %s' % storage)
         proxmox_api.cloneVirtualMachine(node, vmid, install)
         logger.info('starting the clone')
