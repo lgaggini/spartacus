@@ -243,6 +243,7 @@ if __name__ == '__main__':
                    'hot': cli_options.hot, 'ipaddress': cli_options.ipaddress,
                    'netmask': cli_options.netmask,
                    'gateway': cli_options.gateway}
+        options['networks'] = []
         options['networks'].append(network)
         # fix hosts
 
