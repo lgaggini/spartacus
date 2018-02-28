@@ -215,6 +215,7 @@ def rawinit(configs, src, dst, dev=DEV, part='1'):
     logger.info('image %s mounted to %s by %sp%s' % (src, dst, dev, part))
     if (not double_check_hostname(proxmox_ssh, dst, configs['template'])):
         check_exit(*image_umount(proxmox_ssh, dev, src, dst))
+        sys.exit('exiting')
     logger.info('deploy configurations')
     custom_tmp_fd = '%s/%s' % (TMP_DIR, configs['name'])
     deploy(proxmox_ssh, '%s/interfaces' % custom_tmp_fd,
