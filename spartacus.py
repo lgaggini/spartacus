@@ -57,7 +57,8 @@ def getNFSVolume(connessione, name):
         if int(index) % 2 == 0:
             volume = VM_DEFAULTS['EVEN_VOL']
 
-    storage = connessione.getNodeStorage(PROXMOX['HOST'].split('.')[0])
+    storage = check_proxmox_response(connessione.getNodeStorage(
+                                     PROXMOX['HOST'].split('.')[0]))
     logger.debug(storage)
 
     for s in storage['data']:
@@ -75,10 +76,10 @@ def getNFSVolume(connessione, name):
 def findTemplate(connessione, vmname):
     """ look for the provided template and return id and
     location """
-    nodes = connessione.getClusterNodeList()
+    nodes = check_proxmox_response(connessione.getClusterNodeList())
     for node in nodes['data']:
         n = node['node']
-        machines = connessione.getNodeVirtualIndex(n)
+        machines = check_proxmox_response(connessione.getNodeVirtualIndex(n))
         for m in machines['data']:
             logger.debug(m['name'])
             if (m['name'] == vmname):
@@ -89,10 +90,10 @@ def findTemplate(connessione, vmname):
 def getAvailableNode(connessione, memory):
     """choose the host wit more resources available"""
     d = {}
-    nodes = connessione.getClusterNodeList()
+    nodes = check_proxmox_response(connessione.getClusterNodeList())
     for node in nodes['data']:
         n = node['node']
-        status = connessione.getNodeStatus(n)
+        status = check_proxmox_response(connessione.getNodeStatus(n))
         ncpu = status['data']['cpuinfo']['cpus']
         cpu1 = int(float(status['data']['loadavg'][0]))
         cpu5 = int(float(status['data']['loadavg'][1]))
@@ -113,6 +114,17 @@ def getAvailableNode(connessione, memory):
             return node_stat[0]
     logger.error("no host with available resources found")
     sys.exit('exiting')
+
+
+def check_proxmox_response(response):
+    status_code = response['status']['code']
+    if status_code != 200:
+        reason = response['status']['reason']
+        logger.error('proxmox api error, response code %s: %s' %
+                     (status_code, reason))
+        sys.exit('exiting')
+    else:
+        return response
 
 
 def valid_ip_address(ip_address):
@@ -299,7 +311,7 @@ if __name__ == '__main__':
         logger.info('cloning template %s (id %s) on node %s' %
                     (vm_name, tid, target_node))
         logger.info('using storage %s' % storage)
-        proxmox_api.cloneVirtualMachine(node, vmid, install)
+        check_proxmox_response(proxmox_api.cloneVirtualMachine(node, tid, install))
         logger.info('starting the clone')
 
         while True:
@@ -325,7 +337,8 @@ if __name__ == '__main__':
         logger.debug(mod_conf)
         time.sleep(5)
         logger.info('clone end')
-        proxmox_api.setVirtualMachineOptions(target_node, newid, mod_conf)
+        check_proxmox_response(proxmox_api.setVirtualMachineOptions
+                               (target_node, newid, mod_conf))
         logger.info('options settings')
 
         newimage = 'vm-%s-disk-1.raw' % newid
@@ -338,7 +351,8 @@ if __name__ == '__main__':
         rawinit.rawinit(options, src, dst)
 
         logger.debug(proxmox_api.getVirtualConfig(target_node, newid))
-        proxmox_api.startVirtualMachine(target_node, newid)
+        check_proxmox_response(proxmox_api.startVirtualMachine(
+                               target_node, newid))
         logger.info('starting the vm %s (id %s) on node %s' %
                     (name, newid, target_node))
     else:
