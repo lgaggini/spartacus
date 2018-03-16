@@ -18,7 +18,7 @@ allow-hotplug {{ item.id }}
 iface {{ item.id }} inet static
     address {{ item.ipaddress }}
     netmask {{ item.netmask }}
-{% if item.gateway is defined %}
-    gateway {{ item.gateway }}
+{% if item.gateway is defined -%}
+{{ "    gateway " + item.gateway }}
 {% endif  -%}
 {% endfor %}
