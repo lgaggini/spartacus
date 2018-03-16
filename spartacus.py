@@ -335,7 +335,7 @@ if __name__ == '__main__':
         mod_conf.append(('cores', options['cores']))
         mod_conf.append(('sockets', options['sockets']))
         logger.debug(mod_conf)
-        time.sleep(5)
+        time.sleep(10)
         logger.info('clone end')
         check_proxmox_response(proxmox_api.setVirtualMachineOptions
                                (target_node, newid, mod_conf))
