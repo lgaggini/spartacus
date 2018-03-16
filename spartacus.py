@@ -292,7 +292,7 @@ if __name__ == '__main__':
 
         if 'auto' in options['vmid']:
             # prende il primo id disponibile
-            newid = check_proxmox_response(proxmox_api.getClusterVmNextId()['data'])
+            newid = check_proxmox_response(proxmox_api.getClusterVmNextId())['data']
         else:
             newid = options['vmid']
 
