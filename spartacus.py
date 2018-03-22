@@ -13,8 +13,8 @@ import logging
 import coloredlogs
 import argparse
 import socket
-from settings.settings import PROXMOX, VM_RESOURCES, VM_DEFAULTS, KVM_THRES
-from settings.settings import IMAGES_BASEPATH, WORKING_MNT
+from settings.settings import PROXMOX, VM_RESOURCES, VM_DEFAULTS, VM_DEFAULTS8
+from settings.settings import KVM_THRES, IMAGES_BASEPATH, WORKING_MNT
 import rawinit
 import yaml
 import re
@@ -311,7 +311,8 @@ if __name__ == '__main__':
         logger.info('cloning template %s (id %s) on node %s' %
                     (vm_name, tid, target_node))
         logger.info('using storage %s' % storage)
-        check_proxmox_response(proxmox_api.cloneVirtualMachine(node, tid, install))
+        check_proxmox_response(proxmox_api.cloneVirtualMachine(node, tid,
+                                                               install))
         logger.info('starting the clone')
 
         while True:
@@ -328,8 +329,12 @@ if __name__ == '__main__':
                       ',bridge=vmbr' + interface['vlan']
                 mod_conf.append(('net%s' % i, str))
                 logger.debug(mod_conf)
-                interface['id'] = '%s%i' % (VM_DEFAULTS['STARTNIC'],
-                                            VM_DEFAULTS['STARTNICID']+i)
+                if vm_name == 'masterdebian8':
+                    interface['id'] = '%s%i' % (VM_DEFAULTS8['STARTNIC'],
+                                                VM_DEFAULTS8['STARTNICID']+i)
+                else:
+                    interface['id'] = '%s%i' % (VM_DEFAULTS['STARTNIC'],
+                                                VM_DEFAULTS['STARTNICID']+i)
                 logger.debug(interface['id'])
         mod_conf.append(('memory', options['memory']))
         mod_conf.append(('cores', options['cores']))

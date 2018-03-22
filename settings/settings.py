@@ -37,6 +37,20 @@ VM_DEFAULTS = {
     'STARTNIC': 'ens',
     'STARTNICID': 18
 }
+# vm defaults
+VM_DEFAULTS8 = {
+    'ODD_VOL': 'vol01',
+    'EVEN_VOL': 'vol02',
+    'TEMPLATE': 'masterdebian8',
+    'TEMPLATEID': '400',
+    'TEMPLATENODE': 'kvm',
+    'CORES': '2',
+    'SOCKETS': '2',
+    'RAM': '4096',
+    'FARM': 'farm1',
+    'STARTNIC': 'eth',
+    'STARTNICID': 0
+}
 
 # proxmox settings
 PROXMOX = {
