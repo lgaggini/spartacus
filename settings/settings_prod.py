@@ -36,8 +36,8 @@ KVM_THRES = {
 
 # vm defaults
 VM_DEFAULTS = {
-    'ODD_VOL': 'vol01',
-    'EVEN_VOL': 'vol02',
+    'ODD_VOL': ['vol01', 'vol03'],
+    'EVEN_VOL': ['vol02', 'vol04'],
     'TEMPLATE': 'masterdebian9',
     'TEMPLATEID': '694',
     'TEMPLATENODE': 'kvm',
@@ -50,8 +50,8 @@ VM_DEFAULTS = {
 }
 # vm defaults
 VM_DEFAULTS8 = {
-    'ODD_VOL': 'vol01',
-    'EVEN_VOL': 'vol02',
+    'ODD_VOL': ['vol01', 'vol03'],
+    'EVEN_VOL': ['vol02', 'vol04'],
     'TEMPLATE': 'masterdebian8',
     'TEMPLATEID': '400',
     'TEMPLATENODE': 'kvm',

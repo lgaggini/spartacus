@@ -19,6 +19,7 @@ import rawinit
 import yaml
 import re
 from yamlschema import vm_schema, VMDefValidator
+import operator
 
 
 logger = logging.getLogger('spartacus')
@@ -45,32 +46,45 @@ def MACprettyprint(mac):
 
 
 def getNFSVolume(connessione, name):
-    """ choose the storage volume based on vm index and check
-    for available space """
+    """ choose the storage volume based on vm index, check
+    for available space and selecte the bigger one """
 
-    volume = VM_DEFAULTS['ODD_VOL']
+    selected_volumes = {}
+
+    volumes = VM_DEFAULTS['ODD_VOL']
 
     m = re.search(r'\d+$', name)
     if m is not None:
         index = m.group()
         logger.debug(index)
         if int(index) % 2 == 0:
-            volume = VM_DEFAULTS['EVEN_VOL']
+            volumes = VM_DEFAULTS['EVEN_VOL']
 
     storage = check_proxmox_response(connessione.getNodeStorage(
                                      PROXMOX['HOST'].split('.')[0]))
     logger.debug(storage)
 
     for s in storage['data']:
-        if volume in s['storage']:
-            avail = s['avail']
-            logger.debug(avail)
-            if avail <= KVM_THRES['SPACE']:
-                logger.error('available space %s is under the minimum allowed (%s) on \
-                              %s' % (avail, KVM_THRES['SPACE'], volume))
-                sys.exit('exiting')
+        for volume in volumes:
+            logger.debug(volume)
+            if volume in s['storage']:
+                avail = s['avail']
+                logger.debug(avail)
+                if avail <= KVM_THRES['SPACE']:
+                    logger.debug('available space %s is under the minimum allowed (%s) on \
+                                  %s' % (avail, KVM_THRES['SPACE'], volume))
+                    continue
+                else:
+                    selected_volumes[volume] = avail
 
-    return volume
+    logger.debug(selected_volumes)
+    if not any(selected_volumes):
+        logger.error('no available space on selected volumes: %s' %
+                     (','.join(volumes)))
+        sys.exit('exiting')
+    else:
+        return sorted(selected_volumes.items(),
+                      key=operator.itemgetter(1))[0][0]
 
 
 def findTemplate(connessione, vmname):
