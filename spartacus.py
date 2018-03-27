@@ -251,6 +251,7 @@ if __name__ == '__main__':
     parser.add_argument('-s', '--sockets', default='2',
                         choices=VM_RESOURCES['SOCKETS'],
                         help='# of socket (default 2)')
+    parser.add_argument('--fqdn', help='fqdn for hosts file')
     parser.add_argument('-f', '--farm', default='farm1',
                         choices=VM_RESOURCES['FARMS'],
                         help='farm for puppet')
@@ -282,6 +283,16 @@ if __name__ == '__main__':
         options['networks'] = []
         options['networks'].append(network)
         # fix hosts
+        if cli_options.fqdn is not None:
+            options['hosts'] = []
+            if cli_options.ipaddress is None:
+                host_address = '127.0.0.1'
+            else:
+                host_address = cli_options.ipaddress
+            host = {'ipaddress': host_address,
+                    'name': cli_options.fqdn,
+                    'alias': cli_options.name}
+            options['hosts'].append(host)
 
     logger.debug(options)
 
