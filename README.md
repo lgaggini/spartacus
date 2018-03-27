@@ -29,11 +29,16 @@ The yaml inventory file is validated against a yaml schema.
 
 ```
 usage: spartacus.py [-h] [-t TEMPLATE] [--templateid TEMPLATEID] [--vmid VMID]
-                    [-n NAME] [-i INVENTORY] [-d DESCRIPTION] [--vlan {6,116}]
+                    [-n NAME] [-i INVENTORY] [-d DESCRIPTION]
+                    [--vlan {0,3,4,5,6,7,11,13,14,15,20,21,22,23,24,25,27,28,29,30,31,32,33,34,
+                     36,37,38,39,40,42,43,44,45,46,47,48,49,50,51,52,53,54,56,57,58,59,60,61,63,
+                     64,65,66,68,69,70,71,91,99,100,101,102,103,104,105,106,107,108,109,110,111,
+                     112,113,114,115,116,117,118,119,120,121,122,123,124,125,126,127,128,129,130,
+                     131,132,133,134,135,136,137,138,139,140,141,153,172,183}]
                     [--auto] [--hot] [--ipaddress IPADDRESS]
                     [--netmask NETMASK] [--gateway GATEWAY]
-                    [-m {128,256,512,1024,2048,4096,8192}] [-c {1,2,4,8,16}]
-                    [-s {1,2,4,8,16}]
+                    [-m {128,256,512,1024,2048,4096,8192,16384,32768}]
+                    [-c {1,2,4,8,16}] [-s {1,2,4,8,16}] [--fqdn FQDN]
                     [-f {farm1,farm2,farm3}]
                     [-e ENV]
 
@@ -44,14 +49,21 @@ optional arguments:
   -t TEMPLATE, --template TEMPLATE
                         Name of template to clone (default masterdebian9)
   --templateid TEMPLATEID
-                        id of the template to clone (default 100)
+                        id of the template to clone (default 694)
   --vmid VMID           the vmid for the new vm
   -n NAME, --name NAME  Name of new virtual machines
   -i INVENTORY, --inventory INVENTORY
                         Yaml file path to read
   -d DESCRIPTION, --description DESCRIPTION
                         description for new vm
-  --vlan {6,116}, --net {6,116}
+  --vlan {0,3,4,5,6,7,11,13,14,15,20,21,22,23,24,25,27,28,29,30,31,32,33,34,36,37,38,39,40,42,
+  43,44,45,46,47,48,49,50,51,52,53,54,56,57,58,59,60,61,63,64,65,66,68,69,70,71,91,99,100,101,
+  102,103,104,105,106,107,108,109,110,111,112,113,114,115,116,117,118,119,120,121,122,123,124,
+  125,126,127,128,129,130,131,132,133,134,135,136,137,138,139,140,141,153,172,183}, --net {0,3,
+  4,5,6,7,11,13,14,15,20,21,22,23,24,25,27,28,29,30,31,32,33,34,36,37,38,39,40,42,43,44,45,46,47,
+  48,49,50,51,52,53,54,56,57,58,59,60,61,63,64,65,66,68,69,70,71,91,99,100,101,102,103,104,105,
+  106,107,108,109,110,111,112,113,114,115,116,117,118,119,120,121,122,123,124,125,126,127,128,
+  129,130,131,132,133,134,135,136,137,138,139,140,141,153,172,183}
                         vlan for the first interface
   --auto                allow auto for the first interface
   --hot                 allow hotplug for the first interface
@@ -59,12 +71,13 @@ optional arguments:
                         first interface ip address
   --netmask NETMASK     first interface netmask
   --gateway GATEWAY     first interface gateway
-  -m {128,256,512,1024,2048,4096,8192}, --memory {128,256,512,1024,2048,4096,8192}
+  -m {128,256,512,1024,2048,4096,8192,16384,32768}, --memory {128,256,512,1024,2048,4096,8192,16384,32768}
                         MB of ram to be allocated (default 4096)
   -c {1,2,4,8,16}, --cores {1,2,4,8,16}
                         # of cores (default 2)
   -s {1,2,4,8,16}, --sockets {1,2,4,8,16}
                         # of socket (default 2)
+  --fqdn FQDN           fqdn for hosts file
   -f {farm1,farm2,farm3}, --farm {farm1,farm2,farm3}
                         farm for puppet
   -e ENV, --env ENV     environment for puppet
