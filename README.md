@@ -177,7 +177,7 @@ vm_schema = {
 ```
 
 ## Inventory example
-```yaml
+```yml
 ---$                                                                                                                                                                                                                
 template: masterdebian9
 name: spartacus01
