@@ -1,7 +1,9 @@
 # spartacus
 
 spartacus is a python tool to create a virtual machine on a proxmox cluster cloning an existent kvm virtual machine or
-template and perform a debian starting configuration by rawinit (based on qemu-nbd):
+template and perform a debian starting configuration by rawinit (based on qemu-nbd).
+It extends my old-project [proxmox-init](https://github.com/libersoft/proxmox-init) for my current environment (where cloudinit doesn't work yet).
+It configures:
 
 * hostname
 * network
@@ -9,25 +11,41 @@ template and perform a debian starting configuration by rawinit (based on qemu-n
 * puppet
 * RSA ssh host key
 * admin authorized keys
-    * serverfarm
-    * environment
+* serverfarm
+* environment
 
-## Requirements
+## Install
+### Clone
+```bash
+git clone https://github.com/lgaggini/spartacus.git
 ```
+
+### [Virtualenv](https://virtualenvwrapper.readthedocs.io/en/latest/command_ref.html) (strongly suggested but optional)
+```bash
+mkvirtualenv -a spartacus spartacus
+```
+
+### Requirements
+```bash
 pip install -r requirements.txt
 ```
+For `pyproxmox` maybe the pip version is a bit outdated and you could need to get the updated version directly at
+[github repo](https://github.com/Daemonthread/pyproxmox).
+In the pip version the function `getClusterNodeList()` seems to be missing.
 
 ## Configuration
-Before use you have to configure settings in settings/settings.py. At least you have to configure PROXMOX dict for endpoint and
+Before use you have to configure settings in `settings/settings.py`. At least you have to configure PROXMOX dict for endpoint and
 authorization configuration. You can configure also application local path and virtual machine creation defaults and availabe choices
-(e.g. ram sizes, core and socket available)
+(e.g. ram sizes, core and socket available).
+You can also double check the jinja templates in `templates` directory.
 
 ## Usage
 
 You can use spartacus passing arguments by command line or in an infrastructure as a code pattern you can pass arguments by a yaml file.
 The yaml inventory file is validated against a yaml schema.
+In the `hostbooks` directory you can find an example host book.
 
-```
+```bash
 usage: spartacus.py [-h] [-t TEMPLATE] [--templateid TEMPLATEID] [--vmid VMID]
                     [-n NAME] [-i INVENTORY] [-d DESCRIPTION]
                     [--vlan {0,3,4,5,6,7,11,13,14,15,20,21,22,23,24,25,27,28,29,30,31,32,33,34,
@@ -85,7 +103,7 @@ optional arguments:
 ```
 
 ## Inventory schema
-```
+```python
 hosts_schema = {
     'type': 'list',
     'minlength': 1,
@@ -159,7 +177,7 @@ vm_schema = {
 ```
 
 ## Inventory example
-```
+```yaml
 ---$                                                                                                                                                                                                                
 template: masterdebian9
 name: spartacus01
