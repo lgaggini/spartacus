@@ -1,0 +1,21 @@
+---
+template: masterdebian9
+vmid: 'auto'
+name: spartacus01
+description: spartacus01
+hosts:
+    - ipaddress: 172.20.16.110
+      name: spartacus01.domain
+      alias: spartacus01
+sockets: '2'
+cores: '2'
+memory: '4096'
+interfaces:
+    - vlan: '116'
+      auto: True
+      hotplug: True
+      ipaddress: 172.20.16.110
+      netmask: 255.255.248.0
+      gateway: 172.20.16.1
+farm: farm1
+env: base
