@@ -252,7 +252,7 @@ if __name__ == '__main__':
                         choices=VM_RESOURCES['SOCKETS'],
                         help='# of socket (default 2)')
     parser.add_argument('--fqdn', help='fqdn for hosts file')
-    parser.add_argument('-f', '--farm', default='farm1',
+    parser.add_argument('-f', '--farm', default=VM_RESOURCES['FARMS'][0],
                         choices=VM_RESOURCES['FARMS'],
                         help='farm for puppet')
     parser.add_argument('-e', '--env', help='environment for puppet')
