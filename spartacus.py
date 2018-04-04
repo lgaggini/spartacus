@@ -342,7 +342,8 @@ if __name__ == '__main__':
 
         while True:
             vstatus = proxmox_api.getVirtualStatus(target_node, newid)
-            if vstatus['data']['name'] == name:
+            if vstatus['status']['code'] == 200 \
+               and vstatus['data']['name'] == name:
                 break
             logger.info('waiting 5 seconds')
             time.sleep(5)
