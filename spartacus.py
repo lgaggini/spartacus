@@ -199,7 +199,7 @@ def yaml_parse(path, schema):
         try:
             options = yaml.safe_load(yaml_stream)
         except yaml.YAMLError, ex:
-            logger.error('YAML parsing exception: ' + str(ex))
+            logger.error('YAML parsing exception: %s' % str(ex))
             sys.exit('exiting')
         options, isvalid, errors = valid_yaml_schema(options, schema)
         if isvalid:
@@ -317,7 +317,8 @@ if __name__ == '__main__':
 
         if 'auto' in options['vmid']:
             # prende il primo id disponibile
-            newid = check_proxmox_response(proxmox_api.getClusterVmNextId())['data']
+            newid = check_proxmox_response(proxmox_api.getClusterVmNextId()
+                                           )['data']
         else:
             newid = options['vmid']
 
@@ -348,12 +349,15 @@ if __name__ == '__main__':
             logger.info('waiting 5 seconds')
             time.sleep(5)
 
+        logger.info('clone end')
+
         mod_conf = []
         for i, interface in enumerate(options['interfaces']):
             if (interface['vlan'] is not None):
-                str = 'virtio=' + MACprettyprint(randomMAC()) +\
-                      ',bridge=vmbr' + interface['vlan']
-                mod_conf.append(('net%s' % i, str))
+                net_str = 'virtio=%s,bridge=vmbr%s' % (MACprettyprint(
+                                                       randomMAC()),
+                                                       interface['vlan'])
+                mod_conf.append(('net%s' % i, net_str))
                 logger.debug(mod_conf)
                 if vm_name == 'masterdebian8':
                     interface['id'] = '%s%i' % (VM_DEFAULTS8['STARTNIC'],
@@ -366,8 +370,7 @@ if __name__ == '__main__':
         mod_conf.append(('cores', options['cores']))
         mod_conf.append(('sockets', options['sockets']))
         logger.debug(mod_conf)
-        time.sleep(10)
-        logger.info('clone end')
+
         check_proxmox_response(proxmox_api.setVirtualMachineOptions
                                (target_node, newid, mod_conf))
         logger.info('options settings')
