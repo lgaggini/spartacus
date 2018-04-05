@@ -156,6 +156,22 @@ interfaces_schema = {
     }
 }
 
+disks_schema = {
+    'type': 'list',
+    'minlength': 0,
+    'schema': {
+        'type': 'dict',
+        'schema': {
+            'size': {
+                'type': 'string', 'allowed': VM_RESOURCES['DISKSIZES']
+            },
+            'format': {
+                'type': 'string', 'allowed': VM_RESOURCES['DISKFORMATS']
+            },
+        }
+    }
+}
+
 vm_schema = {
     'template': {'type': 'string', 'default': VM_DEFAULTS['TEMPLATE']},
     'templateid': {'type': 'string', 'default': VM_DEFAULTS['TEMPLATEID']},
@@ -170,6 +186,7 @@ vm_schema = {
     'memory': {'type': 'string', 'allowed': VM_RESOURCES['RAM'],
                'default': VM_DEFAULTS['RAM']},
     'interfaces': interfaces_schema,
+    'disks': disks_schema,
     'farm':  {'type': 'string', 'allowed': VM_RESOURCES['FARMS'],
               'default': VM_DEFAULTS['FARM']},
     'env':  {'type': 'string'}
@@ -198,5 +215,8 @@ interfaces:
       netmask: 255.255.248.0
       gateway: 172.20.16.1
 farm: farm1
+disks:
+    - size: '1'
+      format: 'raw'
 env: base
 ```

@@ -18,4 +18,7 @@ interfaces:
       netmask: 255.255.248.0
       gateway: 172.20.16.1
 farm: farm1
+disks:
+    - size: '1'
+      format: 'raw'
 env: base

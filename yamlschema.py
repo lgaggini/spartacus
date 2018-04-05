@@ -57,6 +57,22 @@ interfaces_schema = {
     }
 }
 
+disks_schema = {
+    'type': 'list',
+    'minlength': 0,
+    'schema': {
+        'type': 'dict',
+        'schema': {
+            'size': {
+                'type': 'string', 'allowed': VM_RESOURCES['DISKSIZES']
+            },
+            'format': {
+                'type': 'string', 'allowed': VM_RESOURCES['DISKFORMATS']
+            },
+        }
+    }
+}
+
 vm_schema = {
     'template': {'type': 'string', 'default': VM_DEFAULTS['TEMPLATE']},
     'templateid': {'type': 'string', 'default': VM_DEFAULTS['TEMPLATEID']},
@@ -71,6 +87,7 @@ vm_schema = {
     'memory': {'type': 'string', 'allowed': VM_RESOURCES['RAM'],
                'default': VM_DEFAULTS['RAM']},
     'interfaces': interfaces_schema,
+    'disks': disks_schema,
     'farm':  {'type': 'string', 'allowed': VM_RESOURCES['FARMS'],
               'default': VM_DEFAULTS['FARM']},
     'env':  {'type': 'string'}
