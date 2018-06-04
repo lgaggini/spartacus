@@ -27,8 +27,8 @@ logger = logging.getLogger('spartacus')
 
 def log_init():
     FORMAT = '%(asctime)s %(levelname)s %(module)s %(message)s'
-    logging.basicConfig(format=FORMAT, level=logging.INFO)
-    coloredlogs.install(level='INFO')
+    logging.basicConfig(format=FORMAT, level=logging.DEBUG)
+    coloredlogs.install(level='DEBUG')
 
 
 def randomMAC():
@@ -367,10 +367,11 @@ if __name__ == '__main__':
                                                 VM_DEFAULTS['STARTNICID']+i)
                 logger.debug(interface['id'])
 
-        for i, disk in enumerate(options['disks']):
-            storage_str = '%s:%s,format=%s' % (storage, disk['size'],
+        if 'disks' in options:
+            for i, disk in enumerate(options['disks']):
+                storage_str = '%s:%s,format=%s' % (storage, disk['size'],
                                                disk['format'])
-            mod_conf.append(('virtio%s' % str(i+1), storage_str))
+                mod_conf.append(('virtio%s' % str(i+1), storage_str))
 
         mod_conf.append(('memory', options['memory']))
         mod_conf.append(('cores', options['cores']))
