@@ -99,6 +99,7 @@ optional arguments:
   -f {farm1,farm2,farm3}, --farm {farm1,farm2,farm3}
                         farm for puppet
   -e ENV, --env ENV     environment for puppet
+   --no-rawinit          disable the rawinit component (default enabled)
 
 ```
 

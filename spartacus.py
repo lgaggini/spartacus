@@ -256,6 +256,9 @@ if __name__ == '__main__':
                         choices=VM_RESOURCES['FARMS'],
                         help='farm for puppet')
     parser.add_argument('-e', '--env', help='environment for puppet')
+    parser.add_argument('--no-rawinit', dest='init', action='store_false',
+                        help='disable the rawinit component (default enabled)')
+    parser.set_defaults(init=True)
 
     options = {}
 
@@ -272,6 +275,8 @@ if __name__ == '__main__':
         logger.debug(parsed_options)
         logger.debug(parsed_options['template'])
         options = parsed_options
+        # fix rawinit
+        options['init'] = cli_options.init
     else:
         options = vars(cli_options)
         # fix networks
@@ -389,7 +394,8 @@ if __name__ == '__main__':
         dst = '%s/%s' % (WORKING_MNT, newid)
         logger.debug(dst)
 
-        rawinit.rawinit(options, src, dst)
+        if options['init']:
+            rawinit.rawinit(options, src, dst)
 
         logger.debug(proxmox_api.getVirtualConfig(target_node, newid))
         check_proxmox_response(proxmox_api.startVirtualMachine(
