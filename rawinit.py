@@ -10,6 +10,7 @@ import logging
 import argparse
 import coloredlogs
 import subprocess
+import os
 
 logger = logging.getLogger('rawinit')
 
@@ -36,8 +37,9 @@ def template_compile(configs):
     for config_key in TEMPLATE_MAP.keys():
         j2_template = env.get_template('%s.j2' % config_key)
         with open('%s/%s' % (custom_tmp_fd, config_key), 'w') as config_file:
-            var = configs[TEMPLATE_MAP[config_key]]
-            config_file.write(j2_template.render(var=var))
+            if TEMPLATE_MAP[config_key] in configs:
+                var = configs[TEMPLATE_MAP[config_key]]
+                config_file.write(j2_template.render(var=var))
 
 
 def get_proxmox_ssh(proxmox):
@@ -136,6 +138,10 @@ def ssh_folder_init(ssh, dst):
 def deploy(ssh, src, dst, priv_key=False, pub_key=False):
     """ deploys the src file on dst wit some special managemente for
     ssh keys """
+    if not os.path.exists(src)
+        logger.warning('File %s not compiled and will not be deployed' % src)
+        return
+
     logger.info('deploy %s to %s' % (src, dst))
     if(not double_check_path(dst, WORKING_MNT)):
         return
@@ -153,7 +159,7 @@ def deploy(ssh, src, dst, priv_key=False, pub_key=False):
             proxmox_sftp.chmod(dst, 0644)
 
     except Exception, ex:
-        logger.error('SFTP exception: ' + str(ex))
+        logger.error('SFTP exception: %s' % str(ex))
 
     proxmox_sftp.close()
     logger.info('verify the deployed file')
@@ -260,7 +266,7 @@ if __name__ == '__main__':
 
     configs = {
         'name': 'myvm1',
-        'farm': 'farm1',
+        'farm': 'InetRegister',
         'env': 'base',
         'interfaces': [
             {
