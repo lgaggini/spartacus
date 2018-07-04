@@ -106,18 +106,19 @@ def getAvailableNode(connessione, memory):
     d = {}
     nodes = check_proxmox_response(connessione.getClusterNodeList())
     for node in nodes['data']:
-        n = node['node']
-        status = check_proxmox_response(connessione.getNodeStatus(n))
-        ncpu = status['data']['cpuinfo']['cpus']
-        cpu1 = int(float(status['data']['loadavg'][0]))
-        cpu5 = int(float(status['data']['loadavg'][1]))
-        totram = status['data']['memory']['total']/1048576
-        freeram = status['data']['memory']['free']/1048576
-        percram = int(freeram * 100 / totram)
-        magic = ncpu - (cpu1 + cpu5)/2 + int(percram)
-        logger.debug('%s %s %s %s %s %s %s' % (n, cpu1, cpu5, totram,
-                                               freeram, percram, magic))
-        d[n] = {'magic': magic, 'freeram': freeram}
+        if node['status'] == 'online':
+            n = node['node']
+            status = check_proxmox_response(connessione.getNodeStatus(n))
+            ncpu = status['data']['cpuinfo']['cpus']
+            cpu1 = int(float(status['data']['loadavg'][0]))
+            cpu5 = int(float(status['data']['loadavg'][1]))
+            totram = status['data']['memory']['total']/1048576
+            freeram = status['data']['memory']['free']/1048576
+            percram = int(freeram * 100 / totram)
+            magic = ncpu - (cpu1 + cpu5)/2 + int(percram)
+            logger.debug('%s %s %s %s %s %s %s' % (n, cpu1, cpu5, totram,
+                                                   freeram, percram, magic))
+            d[n] = {'magic': magic, 'freeram': freeram}
 
     for node_stat in sorted(d.items(), key=lambda x: x[1]['magic'],
                             reverse=True):
