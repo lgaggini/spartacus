@@ -207,8 +207,6 @@ def rawinit(settings, configs, src, dst, dev='/dev/nbd0', part='1'):
     cfg = settings
     logger.info(cfg)
 
-    sys.exit()
-
     template_compile(configs)
 
     try:

@@ -130,6 +130,7 @@ def getAvailableNode(connessione, memory):
     """choose the host wit more resources available"""
     d = {}
     nodes = check_proxmox_response(connessione.getClusterNodeList())
+
     for node in nodes['data']:
         if node['status'] == 'online':
             n = node['node']
@@ -314,6 +315,10 @@ if __name__ == '__main__':
         options = parsed_options
         # fix rawinit
         options['init'] = cli_options.init
+        # fix puppet
+        options['puppet'] = {}
+        options['puppet']['puppetmaster'] = options['puppetmaster']
+        options['puppet']['env'] = options['env']
     else:
         options = vars(cli_options)
         # fix networks

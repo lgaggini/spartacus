@@ -47,6 +47,7 @@ VM_DEFAULTS = {
     'SOCKETS': '2',
     'RAM': '4096',
     'FARM': 'farm1',
+    'ENV': 'base',
     'STARTNIC': 'ens',
     'STARTNICID': 18
 }
@@ -61,6 +62,7 @@ VM_DEFAULTS8 = {
     'SOCKETS': '2',
     'RAM': '4096',
     'FARM': 'farm1',
+    'ENV': 'base',
     'STARTNIC': 'eth',
     'STARTNICID': 0
 }
@@ -78,7 +80,7 @@ TEMPLATE_MAP = {
     'hostname': 'name',
     'interfaces': 'interfaces',
     'hosts': 'hosts',
-    'puppet.conf': 'env',
+    'puppet.conf': 'puppet',
     'pu_puppetenvironment': 'env',
     'serverfarm': 'farm'
 }

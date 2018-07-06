@@ -22,3 +22,4 @@ disks:
     - size: '1'
       format: 'raw'
 env: base
+puppetmaster: puppetmaster.domain

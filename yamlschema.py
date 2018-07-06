@@ -90,7 +90,8 @@ vm_schema = {
     'disks': disks_schema,
     'farm':  {'type': 'string', 'allowed': VM_RESOURCES['FARMS'],
               'default': VM_DEFAULTS['FARM']},
-    'env':  {'type': 'string'}
+    'env':  {'type': 'string', 'default': VM_DEFAULTS['ENV']},
+    'puppetmaster':  {'type': 'string', 'default': 'puppet.register.it'}
 }
 
 

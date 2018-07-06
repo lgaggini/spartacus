@@ -12,7 +12,7 @@
     ssldir = $vardir/ssl
     
     # Environment
-    environment = {{ var }}
+    environment = {{ var.env }}
 
     # Disable Stringify (as mailed OPS)
     stringify_facts = false
@@ -30,7 +30,7 @@
     # The default value is '$confdir/localconfig'.
     localconfig = $vardir/localconfig
 
-    server = puppet.register.it
+    server = {{ var.puppetmaster }}
     runinterval = 3600
     splay = true
 
