@@ -256,6 +256,9 @@ if __name__ == '__main__':
     parser.add_argument('--no-rawinit', dest='init', action='store_false',
                         help='disable the rawinit component (default enabled)')
     parser.set_defaults(init=True)
+    parser.add_argument('--readonly', dest='readonly', action='store_true',
+                        help='readonly mode for debug (default disabled)')
+    parser.set_defaults(readonly=False)
 
     global cfg
     cfg = settings_load(parser.parse_args().settings)
@@ -319,6 +322,9 @@ if __name__ == '__main__':
         options['puppet'] = {}
         options['puppet']['puppetmaster'] = options['puppetmaster']
         options['puppet']['env'] = options['env']
+        # fix readonly
+        options['readonly'] = cli_options.readonly
+        readonly = options['readonly']
     else:
         options = vars(cli_options)
         # fix networks
@@ -385,17 +391,19 @@ if __name__ == '__main__':
         logger.info('cloning template %s (id %s) on node %s' %
                     (vm_name, tid, target_node))
         logger.info('using storage %s' % storage)
-        check_proxmox_response(proxmox_api.cloneVirtualMachine(node, tid,
-                                                               install))
+        if not readonly:
+            check_proxmox_response(proxmox_api.cloneVirtualMachine(node, tid,
+                                                                   install))
         logger.info('starting the clone')
 
-        while True:
-            vstatus = proxmox_api.getVirtualStatus(target_node, newid)
-            if vstatus['status']['code'] == 200 \
-               and vstatus['data']['name'] == name:
-                break
-            logger.info('waiting 5 seconds')
-            time.sleep(5)
+        if not readonly:
+            while True:
+                vstatus = proxmox_api.getVirtualStatus(target_node, newid)
+                if vstatus['status']['code'] == 200 \
+                   and vstatus['data']['name'] == name:
+                    break
+                logger.info('waiting 5 seconds')
+                time.sleep(5)
 
         logger.info('clone end')
 
@@ -428,8 +436,9 @@ if __name__ == '__main__':
         mod_conf.append(('sockets', options['sockets']))
         logger.debug(mod_conf)
 
-        check_proxmox_response(proxmox_api.setVirtualMachineOptions
-                               (target_node, newid, mod_conf))
+        if not readonly:
+            check_proxmox_response(proxmox_api.setVirtualMachineOptions
+                                   (target_node, newid, mod_conf))
         logger.info('options settings')
 
         newimage = 'vm-%s-disk-1.raw' % newid
@@ -440,11 +449,12 @@ if __name__ == '__main__':
         logger.debug(dst)
 
         if options['init']:
-            rawinit.rawinit(cfg, options, src, dst)
+            rawinit.rawinit(cfg, options, src, dst, readonly=readonly)
 
         logger.debug(proxmox_api.getVirtualConfig(target_node, newid))
-        check_proxmox_response(proxmox_api.startVirtualMachine(
-                               target_node, newid))
+        if not readonly:
+            check_proxmox_response(proxmox_api.startVirtualMachine(
+                                   target_node, newid))
         logger.info('starting the vm %s (id %s) on node %s' %
                     (name, newid, target_node))
     else:

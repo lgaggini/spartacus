@@ -200,7 +200,8 @@ def double_check_path(dst, mnt):
         return True
 
 
-def rawinit(settings, configs, src, dst, dev='/dev/nbd0', part='1'):
+def rawinit(settings, configs, src, dst, dev='/dev/nbd0', part='1',
+            readonly=False):
     log_init()
 
     global cfg
@@ -208,6 +209,10 @@ def rawinit(settings, configs, src, dst, dev='/dev/nbd0', part='1'):
     logger.info(cfg)
 
     template_compile(configs)
+
+    if readonly:
+        logger.info('running in readonly mode, templates compiled')
+        sys.exit('exiting')
 
     try:
         proxmox_ssh = get_proxmox_ssh(cfg['PROXMOX'])
