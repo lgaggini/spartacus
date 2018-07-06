@@ -272,8 +272,7 @@ if __name__ == '__main__':
     description = 'rawinit, customize a debian kvm disk image'
     parser = argparse.ArgumentParser(description=description)
 
-    # TODO: read config from cli or other sources for standalone
-    # usage
+    # TODO: read yaml inventory for direct usage
 
     configs = {
         'name': 'myvm1',
