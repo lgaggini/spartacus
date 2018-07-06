@@ -119,7 +119,7 @@ class VMDefValidator(Validator):
     def _validate_type_vmid(self, value):
         if value == 'auto':
             return True
-        elif int(value) < 1000:
+        elif int(value) < 10000:
             return True
         else:
             return False

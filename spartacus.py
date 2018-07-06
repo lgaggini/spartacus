@@ -188,7 +188,7 @@ def valid_yaml_schema(yaml, schema):
 
 def valid_vmid(vmid):
     """ validator for the proxmox vmid """
-    if not vmid == 'auto' and int(vmid) > 999:
+    if not vmid == 'auto' and int(vmid) > 9999:
         raise argparse.ArgumentTypeError('invalid vmid: %s' % vmid)
     else:
         return vmid
