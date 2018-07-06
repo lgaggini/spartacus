@@ -1,7 +1,5 @@
 #! /usr/bin/env python
 
-from settings.settings import PROXMOX, SSH_HOST_KEY, DEV, TMP_DIR, STATIC_DIR
-from settings.settings import TEMPLATE_MAP, WORKING_MNT
 from paramiko import SSHClient, WarningPolicy
 from paramiko import RSAKey, ECDSAKey
 from jinja2 import Environment, FileSystemLoader
@@ -11,6 +9,7 @@ import argparse
 import coloredlogs
 import subprocess
 import os
+import importlib
 
 logger = logging.getLogger('rawinit')
 
@@ -26,7 +25,7 @@ def template_compile(configs):
     """ compile jinja template """
     env = Environment(loader=FileSystemLoader('templates'))
 
-    custom_tmp_fd = '%s/%s' % (TMP_DIR, configs['name'])
+    custom_tmp_fd = '%s/%s' % (cfg['TMP_DIR'], configs['name'])
     try:
         subprocess.call(['mkdir', '-p', custom_tmp_fd])
     except subprocess.CalledProcessError, ex:
@@ -34,11 +33,11 @@ def template_compile(configs):
                                                            ex.output))
         sys.exit('exiting')
 
-    for config_key in TEMPLATE_MAP.keys():
+    for config_key in cfg['TEMPLATE_MAP'].keys():
         j2_template = env.get_template('%s.j2' % config_key)
         with open('%s/%s' % (custom_tmp_fd, config_key), 'w') as config_file:
-            if TEMPLATE_MAP[config_key] in configs:
-                var = configs[TEMPLATE_MAP[config_key]]
+            if cfg['TEMPLATE_MAP'][config_key] in configs:
+                var = configs[cfg['TEMPLATE_MAP'][config_key]]
                 config_file.write(j2_template.render(var=var))
 
 
@@ -101,7 +100,7 @@ def image_mount(ssh, dev, src, dst, part):
 def image_umount(ssh, dev, src, dst):
     """ umount a qemu mounted image by nbd
     and remove custom mountpoint """
-    double_check_path(dst, WORKING_MNT)
+    double_check_path(dst, cfg['WORKING_MNT'])
     command = 'sudo umount %s' % dst
     exit, stdout, stderr = remote_command(ssh, command)
     if (exit == 0):
@@ -138,12 +137,12 @@ def ssh_folder_init(ssh, dst):
 def deploy(ssh, src, dst, priv_key=False, pub_key=False):
     """ deploys the src file on dst wit some special managemente for
     ssh keys """
-    if not os.path.exists(src)
+    if not os.path.exists(src):
         logger.warning('File %s not compiled and will not be deployed' % src)
         return
 
     logger.info('deploy %s to %s' % (src, dst))
-    if(not double_check_path(dst, WORKING_MNT)):
+    if(not double_check_path(dst, cfg['WORKING_MNT'])):
         return
     try:
         proxmox_sftp = ssh.open_sftp()
@@ -201,11 +200,19 @@ def double_check_path(dst, mnt):
         return True
 
 
-def rawinit(configs, src, dst, dev=DEV, part='1'):
+def rawinit(settings, configs, src, dst, dev='/dev/nbd0', part='1'):
     log_init()
+
+    global cfg
+    cfg = settings
+    logger.info(cfg)
+
+    sys.exit()
+
     template_compile(configs)
+
     try:
-        proxmox_ssh = get_proxmox_ssh(PROXMOX)
+        proxmox_ssh = get_proxmox_ssh(cfg['PROXMOX'])
     except Exception, ex:
         logger.error('SSH exception: ' + str(ex))
         sys.exit('exiting')
@@ -223,7 +230,7 @@ def rawinit(configs, src, dst, dev=DEV, part='1'):
         check_exit(*image_umount(proxmox_ssh, dev, src, dst))
         sys.exit('exiting')
     logger.info('deploy configurations')
-    custom_tmp_fd = '%s/%s' % (TMP_DIR, configs['name'])
+    custom_tmp_fd = '%s/%s' % (cfg['TMP_DIR'], configs['name'])
     deploy(proxmox_ssh, '%s/interfaces' % custom_tmp_fd,
            '%s/etc/network/interfaces' % dst)
     deploy(proxmox_ssh, '%s/hostname' % custom_tmp_fd, '%s/etc/hostname' % dst)
@@ -235,25 +242,25 @@ def rawinit(configs, src, dst, dev=DEV, part='1'):
     deploy(proxmox_ssh, '%s/puppet.conf' % custom_tmp_fd,
            '%s/etc/puppet/puppet.conf' % dst)
     logger.info('generate and deploy tmp RSA 2048 bit host keys')
-    generate_ssh_hostkeys('%s/%s' % (custom_tmp_fd, SSH_HOST_KEY))
+    generate_ssh_hostkeys('%s/%s' % (custom_tmp_fd, cfg['SSH_HOST_KEY']))
     logger.info('generated tmp RSA 2048 bit host keys for first ssh access')
-    priv = '%s' % SSH_HOST_KEY
-    pub = '%s.pub' % SSH_HOST_KEY
+    priv = '%s' % cfg['SSH_HOST_KEY']
+    pub = '%s.pub' % cfg['SSH_HOST_KEY']
     deploy(proxmox_ssh, '%s/%s' % (custom_tmp_fd, priv), '%s/etc/ssh/%s'
            % (dst, priv), priv_key=True)
     deploy(proxmox_ssh, '%s/%s' % (custom_tmp_fd, pub), '%s/etc/ssh/%s'
            % (dst, pub), pub_key=True)
     logger.info('creating the root .ssh folder')
     ssh_folder_init(proxmox_ssh, dst)
-    deploy(proxmox_ssh, '%s/authorized_keys' % STATIC_DIR,
+    deploy(proxmox_ssh, '%s/authorized_keys' % cfg['STATIC_DIR'],
            '%s/root/.ssh/authorized_keys' % dst, priv_key=True)
     logger.info('config deployed')
     logger.info('unmounting of %s to %s by %s' % (src, dst, dev))
     check_exit(*image_umount(proxmox_ssh, dev, src, dst))
     logger.info('image %s unmounted from %s by %s' % (src, dst, dev))
-    logger.info('closing connection to %s' % PROXMOX['SSH_HOST'])
+    logger.info('closing connection to %s' % cfg['PROXMOX']['SSH_HOST'])
     proxmox_ssh.close()
-    logger.info('connection to %s closed' % PROXMOX['SSH_HOST'])
+    logger.info('connection to %s closed' % cfg['PROXMOX']['SSH_HOST'])
 
 
 if __name__ == '__main__':

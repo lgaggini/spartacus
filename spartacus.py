@@ -13,14 +13,17 @@ import logging
 import coloredlogs
 import argparse
 import socket
-from settings.settings import PROXMOX, VM_RESOURCES, VM_DEFAULTS, VM_DEFAULTS8
-from settings.settings import KVM_THRES, IMAGES_BASEPATH, WORKING_MNT
 import rawinit
 import yaml
 import re
 from yamlschema import vm_schema, VMDefValidator
 import operator
+import importlib
+import os
 
+SETTINGS_KEY = ['PROXMOX', 'SSH_HOST_KEY', 'DEV', 'TMP_DIR', 'STATIC_DIR',
+                'VM_RESOURCES', 'VM_DEFAULTS', 'VM_DEFAULTS8', 'KVM_THRES',
+                'IMAGES_BASEPATH', 'TEMPLATE_MAP', 'WORKING_MNT']
 
 logger = logging.getLogger('spartacus')
 
@@ -29,6 +32,27 @@ def log_init():
     FORMAT = '%(asctime)s %(levelname)s %(module)s %(message)s'
     logging.basicConfig(format=FORMAT, level=logging.DEBUG)
     coloredlogs.install(level='DEBUG')
+
+
+def settings_load(settings_file):
+    """ load settings from settings package """
+    logger.info('loading settings from %s' % (settings_file))
+    try:
+        settings_basename = os.path.basename(settings_file)
+        module_name = 'settings.%s' % (os.path.splitext(settings_basename)[0])
+        logger.debug(module_name)
+        settings_module = importlib.import_module(module_name)
+    except ImportError, ex:
+        logger.error('no such file: %s' % (settings_file))
+        sys.exit('exiting')
+    settings = {}
+    try:
+        for setting in SETTINGS_KEY:
+            settings[setting] = getattr(settings_module, setting)
+    except AttributeError, ex:
+        logger.error('settings loading error: %s' % (ex))
+        sys.exit('exiting')
+    return settings
 
 
 def randomMAC():
@@ -51,17 +75,17 @@ def getNFSVolume(connessione, name):
 
     selected_volumes = {}
 
-    volumes = VM_DEFAULTS['ODD_VOL']
+    volumes = cfg['VM_DEFAULTS']['ODD_VOL']
 
     m = re.search(r'\d+$', name)
     if m is not None:
         index = m.group()
         logger.debug(index)
         if int(index) % 2 == 0:
-            volumes = VM_DEFAULTS['EVEN_VOL']
+            volumes = cfg['VM_DEFAULTS']['EVEN_VOL']
 
     storage = check_proxmox_response(connessione.getNodeStorage(
-                                     PROXMOX['HOST'].split('.')[0]))
+                                     cfg['PROXMOX']['HOST'].split('.')[0]))
     logger.debug(storage)
 
     for s in storage['data']:
@@ -70,9 +94,10 @@ def getNFSVolume(connessione, name):
             if volume in s['storage']:
                 avail = s['avail']
                 logger.debug(avail)
-                if avail <= KVM_THRES['SPACE']:
-                    logger.debug('available space %s is under the minimum allowed (%s) on \
-                                  %s' % (avail, KVM_THRES['SPACE'], volume))
+                if avail <= cfg['KVM_THRES']['SPACE']:
+                    logger.debug('available space %s is under the minimum \
+                                 allowed (%s) on %s' %
+                                 (avail, cfg['KVM_THRES']['SPACE'], volume))
                     continue
                 else:
                     selected_volumes[volume] = avail
@@ -124,8 +149,8 @@ def getAvailableNode(connessione, memory):
                             reverse=True):
         logger.debug(node_stat)
         logger.debug(node_stat[1])
-        if node_stat[1]['magic'] >= KVM_THRES['MAGIC'] and\
-           node_stat[1]['freeram'] > int(memory) + KVM_THRES['MEMORY']:
+        if node_stat[1]['magic'] >= cfg['KVM_THRES']['MAGIC'] and\
+           node_stat[1]['freeram'] > int(memory) + cfg['KVM_THRES']['MEMORY']:
             return node_stat[0]
     logger.error("no host with available resources found")
     sys.exit('exiting')
@@ -218,20 +243,33 @@ if __name__ == '__main__':
     description = "spartacus, deploy vm on proxmox cluster"
     parser = argparse.ArgumentParser(description=description)
 
-    parser.add_argument('-t', '--template', default=VM_DEFAULTS['TEMPLATE'],
-                        help='Name of template to clone \
-                        (default %s)' % VM_DEFAULTS['TEMPLATE'])
-    parser.add_argument('--templateid', default=VM_DEFAULTS['TEMPLATEID'],
-                        help='id of the template to clone \
-                        (default %s)' % VM_DEFAULTS['TEMPLATEID'])
-    parser.add_argument('--vmid', default='auto', type=valid_vmid,
-                        help='the vmid for the new vm')
-    parser.add_argument('-n', '--name', default=None,
-                        help='Name of new virtual machines')
+    parser.add_argument('--settings', default='settings',
+                        help='custom settings file in settings package')
     parser.add_argument('-i', '--inventory', default=None,
                         help='Yaml file path to read')
+    parser.add_argument('-n', '--name', default=None,
+                        help='Name of new virtual machines')
     parser.add_argument('-d', '--description', help='description for new vm')
-    parser.add_argument('--vlan', '--net', choices=VM_RESOURCES['VLANS'],
+    parser.add_argument('--vmid', default='auto', type=valid_vmid,
+                        help='the vmid for the new vm')
+    parser.add_argument('--no-rawinit', dest='init', action='store_false',
+                        help='disable the rawinit component (default enabled)')
+    parser.set_defaults(init=True)
+
+    global cfg
+    cfg = settings_load(parser.parse_args().settings)
+    logger.debug(cfg)
+
+    parser.add_argument('-t', '--template',
+                        default=cfg['VM_DEFAULTS']['TEMPLATE'],
+                        help='Name of template to clone \
+                        (default %s)' % cfg['VM_DEFAULTS']['TEMPLATE'])
+    parser.add_argument('--templateid',
+                        default=cfg['VM_DEFAULTS']['TEMPLATEID'],
+                        help='id of the template to clone \
+                        (default %s)' % cfg['VM_DEFAULTS']['TEMPLATEID'])
+    parser.add_argument('--vlan', '--net',
+                        choices=cfg['VM_RESOURCES']['VLANS'],
                         help='vlan for the first interface')
     parser.add_argument('--auto', action='store_true',
                         help='allow auto for the first interface')
@@ -244,22 +282,20 @@ if __name__ == '__main__':
     parser.add_argument('--gateway', type=valid_ip_address,
                         help='first interface gateway')
     parser.add_argument('-m', '--memory', default='4096',
-                        choices=VM_RESOURCES['RAM'],
+                        choices=cfg['VM_RESOURCES']['RAM'],
                         help='MB of ram to be allocated (default 4096)')
     parser.add_argument('-c', '--cores', default='2',
-                        choices=VM_RESOURCES['CORES'],
+                        choices=cfg['VM_RESOURCES']['CORES'],
                         help='# of cores (default 2)')
     parser.add_argument('-s', '--sockets', default='2',
-                        choices=VM_RESOURCES['SOCKETS'],
+                        choices=cfg['VM_RESOURCES']['SOCKETS'],
                         help='# of socket (default 2)')
     parser.add_argument('--fqdn', help='fqdn for hosts file')
-    parser.add_argument('-f', '--farm', default=VM_RESOURCES['FARMS'][0],
-                        choices=VM_RESOURCES['FARMS'],
+    parser.add_argument('-f', '--farm',
+                        default=cfg['VM_RESOURCES']['FARMS'][0],
+                        choices=cfg['VM_RESOURCES']['FARMS'],
                         help='farm for puppet')
     parser.add_argument('-e', '--env', help='environment for puppet')
-    parser.add_argument('--no-rawinit', dest='init', action='store_false',
-                        help='disable the rawinit component (default enabled)')
-    parser.set_defaults(init=True)
 
     options = {}
 
@@ -302,8 +338,9 @@ if __name__ == '__main__':
 
     logger.debug(options)
 
-    logger.info('connecting to %s' % PROXMOX['HOST'])
-    auth = prox_auth(PROXMOX['HOST'], PROXMOX['USER'], PROXMOX['PASSWORD'])
+    logger.info('connecting to %s' % cfg['PROXMOX']['HOST'])
+    auth = prox_auth(cfg['PROXMOX']['HOST'], cfg['PROXMOX']['USER'],
+                     cfg['PROXMOX']['PASSWORD'])
     proxmox_api = pyproxmox(auth)
 
     vm_name = options['template']
@@ -311,11 +348,11 @@ if __name__ == '__main__':
     description = options['description']
     logger.info('looking for the template %s' % vm_name)
     if options['templateid'] is None or\
-       options['template'] != VM_DEFAULTS['TEMPLATE']:
+       options['template'] != cfg['VM_DEFAULTS']['TEMPLATE']:
         tid, node = findTemplate(proxmox_api, vm_name)
     else:
         tid = options['templateid']
-        node = VM_DEFAULTS['TEMPLATENODE']
+        node = cfg['VM_DEFAULTS']['TEMPLATENODE']
     logger.info('template %s, tid %s found'
                 % (options['template'], tid))
 
@@ -366,17 +403,19 @@ if __name__ == '__main__':
                 mod_conf.append(('net%s' % i, net_str))
                 logger.debug(mod_conf)
                 if vm_name == 'masterdebian8':
-                    interface['id'] = '%s%i' % (VM_DEFAULTS8['STARTNIC'],
-                                                VM_DEFAULTS8['STARTNICID']+i)
+                    interface['id'] = '%s%i' % \
+                                      (cfg['VM_DEFAULTS8']['STARTNIC'],
+                                       cfg['VM_DEFAULTS8']['STARTNICID']+i)
                 else:
-                    interface['id'] = '%s%i' % (VM_DEFAULTS['STARTNIC'],
-                                                VM_DEFAULTS['STARTNICID']+i)
+                    interface['id'] = '%s%i' % \
+                                      (cfg['VM_DEFAULTS']['STARTNIC'],
+                                       cfg['VM_DEFAULTS']['STARTNICID']+i)
                 logger.debug(interface['id'])
 
         if 'disks' in options:
             for i, disk in enumerate(options['disks']):
                 storage_str = '%s:%s,format=%s' % (storage, disk['size'],
-                                               disk['format'])
+                                                   disk['format'])
                 mod_conf.append(('virtio%s' % str(i+1), storage_str))
 
         mod_conf.append(('memory', options['memory']))
@@ -389,14 +428,14 @@ if __name__ == '__main__':
         logger.info('options settings')
 
         newimage = 'vm-%s-disk-1.raw' % newid
-        src = '%s/%s/images/%s/%s' % (IMAGES_BASEPATH, storage, newid,
+        src = '%s/%s/images/%s/%s' % (cfg['IMAGES_BASEPATH'], storage, newid,
                                       newimage)
         logger.debug(src)
-        dst = '%s/%s' % (WORKING_MNT, newid)
+        dst = '%s/%s' % (cfg['WORKING_MNT'], newid)
         logger.debug(dst)
 
         if options['init']:
-            rawinit.rawinit(options, src, dst)
+            rawinit.rawinit(cfg, options, src, dst)
 
         logger.debug(proxmox_api.getVirtualConfig(target_node, newid))
         check_proxmox_response(proxmox_api.startVirtualMachine(
