@@ -203,36 +203,48 @@ def double_check_path(dst, mnt):
 
 def rawinit(settings, configs, src, dst, dev='/dev/nbd0', part='1',
             readonly=False, log_level='info'):
+    # log init
     log_init(log_level)
 
+    # load settings
     global cfg
     cfg = settings
     logger.debug(cfg)
 
+    # compile template
     template_compile(configs)
 
+    # exit if it's a readonly run 
     if readonly:
         logger.info('running in readonly mode, templates compiled')
         sys.exit('exiting')
 
+    # proxmox ssh connection
     try:
         proxmox_ssh = get_proxmox_ssh(cfg['PROXMOX'])
     except Exception, ex:
         logger.error('SSH exception: ' + str(ex))
         sys.exit('exiting')
 
+    # load nbd moudule on remote host
     logger.info('modprobing of nbd module')
     check_exit(*nbd_module(proxmox_ssh))
     logger.info("nbd module modprobed")
+
+    # mount vm image
     if check_mount(proxmox_ssh, dev, src, dst):
         logger.info('mountpoint %s busy, unmounting it' % dst)
         image_umount(proxmox_ssh, dev, src, dst)
     logger.info('mounting %s to %s by %s' % (src, dst, dev))
     check_exit(*image_mount(proxmox_ssh, dev, src, dst, part))
     logger.info('image %s mounted to %s by %sp%s' % (src, dst, dev, part))
+
+    # double check hostname on the mounted vm
     if (not double_check_hostname(proxmox_ssh, dst, configs['template'])):
         check_exit(*image_umount(proxmox_ssh, dev, src, dst))
         sys.exit('exiting')
+
+    # deploy configurations
     logger.info('deploy configurations')
     custom_tmp_fd = '%s/%s' % (cfg['TMP_DIR'], configs['name'])
     deploy(proxmox_ssh, '%s/interfaces' % custom_tmp_fd,
@@ -245,6 +257,7 @@ def rawinit(settings, configs, src, dst, dev='/dev/nbd0', part='1',
     deploy(proxmox_ssh, '%s/hosts' % custom_tmp_fd, '%s/etc/hosts' % dst)
     deploy(proxmox_ssh, '%s/puppet.conf' % custom_tmp_fd,
            '%s/etc/puppet/puppet.conf' % dst)
+    # generate ssh host keys
     logger.info('generate and deploy tmp RSA 2048 bit host keys')
     generate_ssh_hostkeys('%s/%s' % (custom_tmp_fd, cfg['SSH_HOST_KEY']))
     logger.info('generated tmp RSA 2048 bit host keys for first ssh access')
@@ -254,11 +267,14 @@ def rawinit(settings, configs, src, dst, dev='/dev/nbd0', part='1',
            % (dst, priv), priv_key=True)
     deploy(proxmox_ssh, '%s/%s' % (custom_tmp_fd, pub), '%s/etc/ssh/%s'
            % (dst, pub), pub_key=True)
+    # public key to ssh access as root user
     logger.info('creating the root .ssh folder')
     ssh_folder_init(proxmox_ssh, dst)
     deploy(proxmox_ssh, '%s/authorized_keys' % cfg['STATIC_DIR'],
            '%s/root/.ssh/authorized_keys' % dst, priv_key=True)
     logger.info('config deployed')
+
+    # deploy end, umount vm disk and close ssh connection
     logger.info('unmounting of %s to %s by %s' % (src, dst, dev))
     check_exit(*image_umount(proxmox_ssh, dev, src, dst))
     logger.info('image %s unmounted from %s by %s' % (src, dst, dev))
