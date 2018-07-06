@@ -14,11 +14,12 @@ import importlib
 logger = logging.getLogger('rawinit')
 
 
-def log_init():
+def log_init(loglevel):
     """ initialize the logging system """
     FORMAT = '%(asctime)s %(levelname)s %(module)s %(message)s'
-    logging.basicConfig(format=FORMAT, level=logging.INFO)
-    coloredlogs.install(level='INFO')
+    logging.basicConfig(format=FORMAT, level=getattr(logging,
+                                                     loglevel.upper()))
+    coloredlogs.install(level=loglevel.upper())
 
 
 def template_compile(configs):
@@ -201,12 +202,12 @@ def double_check_path(dst, mnt):
 
 
 def rawinit(settings, configs, src, dst, dev='/dev/nbd0', part='1',
-            readonly=False):
-    log_init()
+            readonly=False, log_level='info'):
+    log_init(log_level)
 
     global cfg
     cfg = settings
-    logger.info(cfg)
+    logger.debug(cfg)
 
     template_compile(configs)
 

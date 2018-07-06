@@ -50,6 +50,7 @@ In the `hostbooks` directory you can find an example host book.
 ```bash
 usage: spartacus.py [-h] [--settings SETTINGS] [-i INVENTORY] [-n NAME]
                     [-d DESCRIPTION] [--vmid VMID] [--no-rawinit] [--readonly]
+                    [--log-level {debug,info,warning,error,critical}]
                     [-t TEMPLATE] [--templateid TEMPLATEID]
                     [--vlan {0,3,4,5,6,7,11,13,14,15,20,21,22,23,24,25,27,28,29,30,31,32,33,34,
                      36,37,38,39,40,42,43,44,45,46,47,48,49,50,51,52,53,54,56,57,58,59,60,61,63,
@@ -76,6 +77,8 @@ optional arguments:
   --vmid VMID           the vmid for the new vm
   --no-rawinit          disable the rawinit component (default enabled)
   --readonly            readonly mode for debug (default disabled)
+  --log-level {debug,info,warning,error,critical}
+                        log level
   -t TEMPLATE, --template TEMPLATE
                         Name of template to clone (default masterdebian9)
   --templateid TEMPLATEID

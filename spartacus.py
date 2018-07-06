@@ -24,14 +24,17 @@ import os
 SETTINGS_KEY = ['PROXMOX', 'SSH_HOST_KEY', 'DEV', 'TMP_DIR', 'STATIC_DIR',
                 'VM_RESOURCES', 'VM_DEFAULTS', 'VM_DEFAULTS8', 'KVM_THRES',
                 'IMAGES_BASEPATH', 'TEMPLATE_MAP', 'WORKING_MNT']
+LOG_LEVELS = ['debug', 'info', 'warning', 'error', 'critical']
 
 logger = logging.getLogger('spartacus')
 
 
-def log_init():
+def log_init(loglevel):
+    """ initialize the logging system """
     FORMAT = '%(asctime)s %(levelname)s %(module)s %(message)s'
-    logging.basicConfig(format=FORMAT, level=logging.DEBUG)
-    coloredlogs.install(level='DEBUG')
+    logging.basicConfig(format=FORMAT, level=getattr(logging,
+                                                     loglevel.upper()))
+    coloredlogs.install(level=loglevel.upper())
 
 
 def settings_load(settings_file):
@@ -239,8 +242,6 @@ def yaml_parse(path, schema):
 
 if __name__ == '__main__':
 
-    log_init()
-
     description = "spartacus, deploy vm on proxmox cluster"
     parser = argparse.ArgumentParser(description=description)
 
@@ -259,8 +260,10 @@ if __name__ == '__main__':
     parser.add_argument('--readonly', dest='readonly', action='store_true',
                         help='readonly mode for debug (default disabled)')
     parser.set_defaults(readonly=False)
-
+    parser.add_argument('--log-level', default=LOG_LEVELS[1],
+                        help='log level', choices=LOG_LEVELS)
     global cfg
+
     cfg = settings_load(parser.parse_args().settings)
     logger.debug(cfg)
 
@@ -305,6 +308,7 @@ if __name__ == '__main__':
 
     cli_options = parser.parse_args()
     logger.debug(cli_options)
+    log_init(cli_options.log_level)
 
     if cli_options.name is None and cli_options.inventory is None:
         parser.print_help()
@@ -449,7 +453,8 @@ if __name__ == '__main__':
         logger.debug(dst)
 
         if options['init']:
-            rawinit.rawinit(cfg, options, src, dst, readonly=readonly)
+            rawinit.rawinit(cfg, options, src, dst, readonly=readonly,
+                            log_level=cli_options.log_level)
 
         logger.debug(proxmox_api.getVirtualConfig(target_node, newid))
         if not readonly:
