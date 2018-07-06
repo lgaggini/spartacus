@@ -1,8 +1,4 @@
 #! /usr/bin/env python
-# documentazione api proxmox:
-# https://pve.proxmox.com/pve-docs/api-viewer/index.html
-# documentazione pyproxmox:
-# https://github.com/Daemonthread/pyproxmox
 
 from pyproxmox import *
 import time
@@ -372,9 +368,7 @@ if __name__ == '__main__':
                 % (options['template'], tid))
 
     if (tid is not None):
-
         if 'auto' in options['vmid']:
-            # prende il primo id disponibile
             newid = check_proxmox_response(proxmox_api.getClusterVmNextId()
                                            )['data']
         else:
@@ -387,7 +381,6 @@ if __name__ == '__main__':
         storage = getNFSVolume(proxmox_api, options['name'])
         logger.info('storage: %s found' % storage)
 
-        # installa una macchina clonando il template
         install = [('newid', newid), ('name', name), ('full', 1),
                    ('format', 'raw'), ('storage', storage),
                    ('target', target_node), ('description', description)]
