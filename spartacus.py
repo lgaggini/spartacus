@@ -41,14 +41,14 @@ def settings_load(settings_file):
         module_name = 'settings.%s' % (os.path.splitext(settings_basename)[0])
         logger.debug(module_name)
         settings_module = importlib.import_module(module_name)
-    except ImportError, ex:
+    except ImportError:
         logger.error('no such file: %s' % (settings_file))
         sys.exit('exiting')
     settings = {}
     try:
         for setting in SETTINGS_KEY:
             settings[setting] = getattr(settings_module, setting)
-    except AttributeError, ex:
+    except AttributeError as ex:
         logger.error('settings loading error: %s' % (ex))
         sys.exit('exiting')
     return settings
@@ -170,8 +170,8 @@ def check_proxmox_response(response):
 def valid_yaml_inventory(yaml_inventory):
     """ custom argparse validator for input file """
     if not os.path.exists(yaml_inventory):
-        raise arparse.ArgumentTypeError('the file %s does not exist!'
-                                        % yaml_inventory)
+        raise argparse.ArgumentTypeError('the file %s does not exist!'
+                                         % yaml_inventory)
     else:
         return yaml_inventory
 
@@ -190,7 +190,7 @@ def yaml_parse(path, schema):
     with open(path, 'r') as yaml_stream:
         try:
             options = yaml.safe_load(yaml_stream)
-        except yaml.YAMLError, ex:
+        except yaml.YAMLError as ex:
             logger.error('YAML parsing exception: %s' % str(ex))
             sys.exit('exiting')
         options, isvalid, errors = valid_yaml_schema(options, schema)

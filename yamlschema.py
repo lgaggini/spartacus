@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 
-from settings.settings import VM_RESOURCES, VM_DEFAULTS, KVM_THRES
+from settings.settings import VM_RESOURCES, VM_DEFAULTS
 
 from cerberus import Validator
 import socket

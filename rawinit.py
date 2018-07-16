@@ -29,7 +29,7 @@ def template_compile(configs):
     custom_tmp_fd = '%s/%s' % (cfg['TMP_DIR'], configs['name'])
     try:
         subprocess.call(['mkdir', '-p', custom_tmp_fd])
-    except subprocess.CalledProcessError, ex:
+    except subprocess.CalledProcessError as ex:
         logger.error('error creating the folder %s: %s' % (custom_tmp_fd,
                                                            ex.output))
         sys.exit('exiting')
@@ -214,7 +214,7 @@ def rawinit(settings, configs, src, dst, dev='/dev/nbd0', part='1',
     # compile template
     template_compile(configs)
 
-    # exit if it's a readonly run 
+    # exit if it's a readonly run
     if readonly:
         logger.info('running in readonly mode, templates compiled')
         sys.exit('exiting')
