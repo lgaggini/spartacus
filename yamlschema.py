@@ -1,98 +1,114 @@
 #! /usr/bin/env python
 
-from settings.settings import VM_RESOURCES, VM_DEFAULTS
 
 from cerberus import Validator
 import socket
 
-hosts_schema = {
-    'type': 'list',
-    'minlength': 1,
-    'schema': {
-        'type': 'dict',
-        'schema': {
-            'ipaddress': {
-                'type': 'ipaddress'
-            },
-            'name': {
-                'type': 'string',
-                'dependencies': 'ipaddress'
-            },
-            'alias': {
-                'type': 'string',
-                'dependencies': ['ipaddress', 'name']
-            },
-        }
-    }
-}
 
-interfaces_schema = {
-    'type': 'list',
-    'minlength': 1,
-    'schema': {
-        'type': 'dict',
-        'schema': {
-            'vlan': {
-                'type': 'string', 'allowed': VM_RESOURCES['VLANS']
-            },
-            'auto': {
-                'type': 'boolean', 'default': False
-            },
-            'hotplug': {
-                'type': 'boolean', 'default': False
-            },
-            'ipaddress': {
-                'type': 'ipaddress',
-                'dependencies': ['netmask', 'vlan']
-            },
-            'netmask': {
-                'type': 'netmask',
-                'dependencies': ['ipaddress']
-            },
-            'gateway': {
-                'type': 'ipaddress',
-                'dependencies': ['ipaddress', 'netmask']
-            },
-        }
-    }
-}
+class YamlSchema:
+    defaults = {}
+    resources = {}
+    hosts_schema = {}
+    interfaces_schema = {}
+    disks_schema = {}
+    vm_schema = {}
 
-disks_schema = {
-    'type': 'list',
-    'minlength': 0,
-    'schema': {
-        'type': 'dict',
-        'schema': {
-            'size': {
-                'type': 'string', 'allowed': VM_RESOURCES['DISKSIZES']
-            },
-            'format': {
-                'type': 'string', 'allowed': VM_RESOURCES['DISKFORMATS']
-            },
+    def __init__(self, defaults, resources):
+        self.defaults = defaults
+        self.resources = resources
+        self.hosts_schema = {
+            'type': 'list',
+            'minlength': 1,
+            'schema': {
+                'type': 'dict',
+                'schema': {
+                    'ipaddress': {
+                        'type': 'ipaddress'
+                    },
+                    'name': {
+                        'type': 'string',
+                        'dependencies': 'ipaddress'
+                    },
+                    'alias': {
+                        'type': 'string',
+                        'dependencies': ['ipaddress', 'name']
+                    },
+                }
+            }
         }
-    }
-}
+        self.interfaces_schema = {
+            'type': 'list',
+            'minlength': 1,
+            'schema': {
+                'type': 'dict',
+                'schema': {
+                    'vlan': {
+                        'type': 'string', 'allowed': self.resources['VLANS']
+                    },
+                    'auto': {
+                        'type': 'boolean', 'default': False
+                    },
+                    'hotplug': {
+                        'type': 'boolean', 'default': False
+                    },
+                    'ipaddress': {
+                        'type': 'ipaddress',
+                        'dependencies': ['netmask', 'vlan']
+                    },
+                    'netmask': {
+                        'type': 'netmask',
+                        'dependencies': ['ipaddress']
+                    },
+                    'gateway': {
+                        'type': 'ipaddress',
+                        'dependencies': ['ipaddress', 'netmask']
+                    },
+                }
+            }
+        }
+        self.disks_schema = {
+            'type': 'list',
+            'minlength': 0,
+            'schema': {
+                'type': 'dict',
+                'schema': {
+                    'size': {
+                        'type': 'string',
+                        'allowed': self.resources['DISKSIZES']
+                    },
+                    'format': {
+                        'type': 'string',
+                        'allowed': self.resources['DISKFORMATS']
+                    },
+                }
+            }
+        }
+        self.vm_schema = {
+            'template': {'type': 'string',
+                         'default': self.defaults['TEMPLATE']},
+            'templateid': {'type': 'string',
+                           'default': self.defaults['TEMPLATEID']},
+            'name': {'required': True, 'type': 'string'},
+            'vmid': {'type': 'vmid', 'default': 'auto'},
+            'description': {'type': 'string'},
+            'hosts': self.hosts_schema,
+            'sockets': {'type': 'string', 'allowed': self.resources['SOCKETS'],
+                        'default': self.defaults['SOCKETS']},
+            'cores': {'type': 'string', 'allowed': self.resources['CORES'],
+                      'default': self.defaults['CORES']},
+            'memory': {'type': 'string', 'allowed': self.resources['RAM'],
+                       'default': self.defaults['RAM']},
+            'interfaces': self.interfaces_schema,
+            'disks': self.disks_schema,
+            'farm':  {'type': 'string', 'allowed': self.resources['FARMS'],
+                      'default': self.defaults['FARM']},
+            'env':  {'type': 'string', 'default': self.defaults['ENV']},
+            'puppetmaster':  {'type': 'string',
+                              'default': 'puppet.register.it'}
+        }
 
-vm_schema = {
-    'template': {'type': 'string', 'default': VM_DEFAULTS['TEMPLATE']},
-    'templateid': {'type': 'string', 'default': VM_DEFAULTS['TEMPLATEID']},
-    'name': {'required': True, 'type': 'string'},
-    'vmid': {'type': 'vmid', 'default': 'auto'},
-    'description': {'type': 'string'},
-    'hosts': hosts_schema,
-    'sockets': {'type': 'string', 'allowed': VM_RESOURCES['SOCKETS'],
-                'default': VM_DEFAULTS['SOCKETS']},
-    'cores': {'type': 'string', 'allowed': VM_RESOURCES['CORES'],
-              'default': VM_DEFAULTS['CORES']},
-    'memory': {'type': 'string', 'allowed': VM_RESOURCES['RAM'],
-               'default': VM_DEFAULTS['RAM']},
-    'interfaces': interfaces_schema,
-    'disks': disks_schema,
-    'farm':  {'type': 'string', 'allowed': VM_RESOURCES['FARMS'],
-              'default': VM_DEFAULTS['FARM']},
-    'env':  {'type': 'string', 'default': VM_DEFAULTS['ENV']},
-    'puppetmaster':  {'type': 'string', 'default': 'puppet.register.it'}
-}
+    def get_vm_schema(self):
+        return self.vm_schema
 
 
 class VMDefValidator(Validator):

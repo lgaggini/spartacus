@@ -12,7 +12,7 @@ import socket
 import rawinit
 import yaml
 import re
-from yamlschema import vm_schema, VMDefValidator
+from yamlschema import YamlSchema, VMDefValidator
 import operator
 import importlib
 import os
@@ -234,7 +234,9 @@ if __name__ == '__main__':
     logger.debug(cfg)
 
     # load desired config from yaml
-    parsed_options = yaml_parse(cli_options.inventory, vm_schema)
+    yaml_schema = YamlSchema(cfg['VM_DEFAULTS'], cfg['VM_RESOURCES'])
+    parsed_options = yaml_parse(cli_options.inventory,
+                                yaml_schema.get_vm_schema())
     logger.debug(parsed_options)
     logger.debug(parsed_options['template'])
     options = parsed_options
