@@ -3,6 +3,7 @@
 from paramiko import SSHClient, WarningPolicy
 from paramiko import RSAKey, ECDSAKey
 from jinja2 import Environment, FileSystemLoader
+from yamlschema import YamlSchema
 import sys
 import logging
 import argparse
@@ -10,6 +11,8 @@ import coloredlogs
 import subprocess
 import os
 import importlib
+
+LOG_LEVELS = ['debug', 'info', 'warning', 'error', 'critical']
 
 logger = logging.getLogger('rawinit')
 
@@ -147,7 +150,7 @@ def deploy(ssh, src, dst, priv_key=False, pub_key=False):
         return
     try:
         proxmox_sftp = ssh.open_sftp()
-    except Exception, ex:
+    except Exception as ex:
         logger.error('SFTP exception: ' + str(ex))
         sys.exit('exiting')
 
@@ -288,37 +291,49 @@ if __name__ == '__main__':
     description = 'rawinit, customize a debian kvm disk image'
     parser = argparse.ArgumentParser(description=description)
 
-    # TODO: read yaml inventory for direct usage
-
-    configs = {
-        'name': 'myvm1',
-        'farm': 'InetRegister',
-        'env': 'base',
-        'interfaces': [
-            {
-                'vlan': '116',
-                'auto': True,
-                'hotplug': True,
-                'ipaddress': '172.20.16.20',
-                'netmask': '255.255.248.0',
-                'gateway': '172.20.16.1'
-            }
-        ],
-        'hosts': [
-            {
-                'ipaddress': '127.0.0.1',
-                'name': 'myvm1.domain.com',
-                'alias': 'myvm1'
-            }
-        ]
-    }
-
+    parser.add_argument('--settings', default='settings',
+                        help='custom settings file in settings package')
     parser.add_argument('-s', '--source', required=True,
-                        help='the source image to customize')
+                        help='the source id image to customize')
     parser.add_argument('-t', '--target', required=True,
                         help='the mount point to use for customization')
+    parser.add_argument('-i', '--inventory', default=None,
+                        help='Yaml file path to read', required=True)
+    parser.add_argument('-r', '--readonly', dest='readonly',
+                        action='store_true',
+                        help='readonly mode for debug (default disabled)')
+    parser.set_defaults(readonly=False)
+    parser.add_argument('-l', '--log-level', default=LOG_LEVELS[1],
+                        help='log level (default info)', choices=LOG_LEVELS)
 
+    # parse cli options
+    options = {}
     cli_options = parser.parse_args()
-    rawinit(configs, cli_options.source, cli_options.target)
+    log_init(cli_options.log_level)
+    logger.debug(cli_options)
+
+    # load settings from setting package
+    global cfg
+    cfg = settings_load(cli_options.settings)
+    logger.debug(cfg)
+
+    # load desired config from yaml
+    yaml_schema = YamlSchema(cfg['VM_DEFAULTS'], cfg['VM_RESOURCES'])
+    parsed_options = yaml_schema.parse(cli_options.inventory)
+    logger.debug(parsed_options)
+    logger.debug(parsed_options['template'])
+    options = parsed_options
+    # fix puppet
+    options['puppet'] = {}
+    options['puppet']['puppetmaster'] = options['puppetmaster']
+    options['puppet']['env'] = options['env']
+    # fix readonly
+    options['readonly'] = cli_options.readonly
+    readonly = options['readonly']
+    logger.debug(options)
+
+    # call to raw init
+    rawinit(cfg, configs, cli_options.source, cli_options.target,
+            readonly=readonly, log_level=cli_options.log_level)
 
     sys.exit(0)

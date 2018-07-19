@@ -44,9 +44,11 @@ You can also double check the jinja templates in `templates` directory.
 
 You can use spartacus ~~passing arguments by command line or~~ in an infrastructure as a code pattern (the preferred way) by passing
 a yaml file by the `-i/--inventory flag`.
+It's now also possible to invoke directly rawinit to customize a just present vm.
 The yaml inventory file is validated against a yaml schema.
 In the `hostbooks` directory you can find an example host book.
 
+### spartacus
 ```bash
 usage: spartacus.py [-h] [-s SETTINGS] -i INVENTORY [-n] [-r]
                     [-l {debug,info,warning,error,critical}]
@@ -64,6 +66,28 @@ optional arguments:
   -l {debug,info,warning,error,critical}, --log-level {debug,info,warning,error,critical}
                         log level (default info)
 ```
+
+## rawinit
+```bash
+usage: rawinit.py [-h] [--settings SETTINGS] -s SOURCE -t TARGET -i INVENTORY                                                                                                                                      
+                  [-r] [-l {debug,info,warning,error,critical}]
+
+rawinit, customize a debian kvm disk image
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --settings SETTINGS   custom settings file in settings package
+  -s SOURCE, --source SOURCE
+                        the source id image to customize
+  -t TARGET, --target TARGET
+                        the mount point to use for customization
+  -i INVENTORY, --inventory INVENTORY
+                        Yaml file path to read
+  -r, --readonly        readonly mode for debug (default disabled)
+  -l {debug,info,warning,error,critical}, --log-level {debug,info,warning,error,critical}
+                        log level (default info)
+```
+
 
 ## Inventory schema
 ```python
