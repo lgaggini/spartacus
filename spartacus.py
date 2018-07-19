@@ -2,17 +2,14 @@
 
 from pyproxmox import *
 import time
-
 import sys
 import random
 import logging
 import coloredlogs
 import argparse
-import socket
 import rawinit
-import yaml
 import re
-from yamlschema import YamlSchema, VMDefValidator
+from yamlschema import YamlSchema
 import operator
 import importlib
 import os
@@ -167,41 +164,6 @@ def check_proxmox_response(response):
         return response
 
 
-def valid_yaml_inventory(yaml_inventory):
-    """ custom argparse validator for input file """
-    if not os.path.exists(yaml_inventory):
-        raise argparse.ArgumentTypeError('the file %s does not exist!'
-                                         % yaml_inventory)
-    else:
-        return yaml_inventory
-
-
-def valid_yaml_schema(yaml, schema):
-    """ validator for the yaml inventory """
-    validator = VMDefValidator(schema)
-    logger.debug(yaml)
-    normalized_yaml = validator.normalized(yaml)
-    isvalid = validator.validate(normalized_yaml)
-    return normalized_yaml, isvalid, validator.errors
-
-
-def yaml_parse(path, schema):
-    """ yaml parser of the inventory file """
-    with open(path, 'r') as yaml_stream:
-        try:
-            options = yaml.safe_load(yaml_stream)
-        except yaml.YAMLError as ex:
-            logger.error('YAML parsing exception: %s' % str(ex))
-            sys.exit('exiting')
-        options, isvalid, errors = valid_yaml_schema(options, schema)
-        if isvalid:
-            return options
-        else:
-            logger.error('YAML schema error: ')
-            logger.error(errors)
-            sys.exit('exiting')
-
-
 if __name__ == '__main__':
 
     description = "spartacus, deploy vm on proxmox cluster"
@@ -235,8 +197,7 @@ if __name__ == '__main__':
 
     # load desired config from yaml
     yaml_schema = YamlSchema(cfg['VM_DEFAULTS'], cfg['VM_RESOURCES'])
-    parsed_options = yaml_parse(cli_options.inventory,
-                                yaml_schema.get_vm_schema())
+    parsed_options = yaml_schema.parse(cli_options.inventory)
     logger.debug(parsed_options)
     logger.debug(parsed_options['template'])
     options = parsed_options

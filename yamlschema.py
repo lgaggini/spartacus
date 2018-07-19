@@ -3,6 +3,13 @@
 
 from cerberus import Validator
 import socket
+import yaml
+import logging
+import sys
+import argparse
+import os
+
+logger = logging.getLogger('yamlschema')
 
 
 class YamlSchema:
@@ -108,7 +115,41 @@ class YamlSchema:
         }
 
     def get_vm_schema(self):
+        """ return the current schema """
         return self.vm_schema
+
+    def is_valid(self, yaml):
+        """ validator for the yaml inventory """
+        validator = VMDefValidator(self.vm_schema)
+        logger.debug(yaml)
+        normalized_yaml = validator.normalized(yaml)
+        isvalid = validator.validate(normalized_yaml)
+        return normalized_yaml, isvalid, validator.errors
+
+    def parse(self, path):
+        """ yaml parser of the inventory file """
+        path = self.argparse_exists(path)
+        with open(path, 'r') as yaml_stream:
+            try:
+                input_yaml = yaml.safe_load(yaml_stream)
+            except yaml.YAMLError as ex:
+                logger.error('YAML parsing exception: %s' % str(ex))
+                sys.exit('exiting')
+            input_yaml, isvalid, errors = self.is_valid(input_yaml)
+            if isvalid:
+                return input_yaml
+            else:
+                logger.error('YAML schema error: ')
+                logger.error(errors)
+                sys.exit('exiting')
+
+    def argparse_exists(self, path):
+        """ custom argparse validator for input file """
+        if not os.path.exists(path):
+            raise argparse.ArgumentTypeError('the file %s does not exist!'
+                                             % path)
+        else:
+            return path
 
 
 class VMDefValidator(Validator):
