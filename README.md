@@ -39,6 +39,7 @@ recall it with the `--setting flag`. At least you have to configure PROXMOX dict
 authorization configuration. You can configure also application local path and virtual machine creation defaults and availabe choices
 (e.g. ram sizes, core and socket available).
 You can also double check the jinja templates in `templates` directory.
+You can also put an authorized_keys file in the static folder to have them deployed for root user.
 
 ## Usage
 
