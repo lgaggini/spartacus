@@ -12,6 +12,10 @@ import subprocess
 import os
 import importlib
 
+
+SETTINGS_KEY = ['PROXMOX', 'SSH_HOST_KEY', 'DEV', 'TMP_DIR', 'STATIC_DIR',
+                'VM_RESOURCES', 'VM_DEFAULTS', 'VM_DEFAULTS8', 'KVM_THRES',
+                'IMAGES_BASEPATH', 'TEMPLATE_MAP', 'WORKING_MNT']
 LOG_LEVELS = ['debug', 'info', 'warning', 'error', 'critical']
 
 logger = logging.getLogger('rawinit')
@@ -23,6 +27,27 @@ def log_init(loglevel):
     logging.basicConfig(format=FORMAT, level=getattr(logging,
                                                      loglevel.upper()))
     coloredlogs.install(level=loglevel.upper())
+
+
+def settings_load(settings_file):
+    """ load settings from settings package """
+    logger.info('loading settings from %s' % (settings_file))
+    try:
+        settings_basename = os.path.basename(settings_file)
+        module_name = 'settings.%s' % (os.path.splitext(settings_basename)[0])
+        logger.debug(module_name)
+        settings_module = importlib.import_module(module_name)
+    except ImportError:
+        logger.error('no such file: %s' % (settings_file))
+        sys.exit('exiting')
+    settings = {}
+    try:
+        for setting in SETTINGS_KEY:
+            settings[setting] = getattr(settings_module, setting)
+    except AttributeError as ex:
+        logger.error('settings loading error: %s' % (ex))
+        sys.exit('exiting')
+    return settings
 
 
 def template_compile(configs):
@@ -333,7 +358,7 @@ if __name__ == '__main__':
     logger.debug(options)
 
     # call to raw init
-    rawinit(cfg, configs, cli_options.source, cli_options.target,
+    rawinit(cfg, options, cli_options.source, cli_options.target,
             readonly=readonly, log_level=cli_options.log_level)
 
     sys.exit(0)
