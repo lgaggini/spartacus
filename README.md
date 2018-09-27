@@ -165,6 +165,8 @@ vm_schema = {
     'templateid': {'type': 'string', 'default': VM_DEFAULTS['TEMPLATEID']},
     'name': {'required': True, 'type': 'string'},
     'vmid': {'type': 'string', 'default': 'auto'},
+    'node': {'type': 'string', 'default': 'auto',
+             'allowed': self.resources['NODES']},
     'description': {'type': 'string'},
     'hosts': hosts_schema,
     'sockets': {'type': 'string', 'allowed': VM_RESOURCES['SOCKETS'],
@@ -188,6 +190,7 @@ vm_schema = {
 template: masterdebian9
 name: spartacus01
 vmid: '101'
+node: 'auto'
 description: spartacus01
 hosts:
     - ipaddress: 172.20.16.110

@@ -142,15 +142,20 @@ def getAvailableNode(connessione, memory):
                                                    freeram, percram, magic))
             d[n] = {'magic': magic, 'freeram': freeram}
 
+    selected_nodes = []
+
     for node_stat in sorted(d.items(), key=lambda x: x[1]['magic'],
                             reverse=True):
         logger.debug(node_stat)
-        logger.debug(node_stat[1])
         if node_stat[1]['magic'] >= cfg['KVM_THRES']['MAGIC'] and\
            node_stat[1]['freeram'] > int(memory) + cfg['KVM_THRES']['MEMORY']:
-            return node_stat[0]
-    logger.error("no host with available resources found")
-    sys.exit('exiting')
+            selected_nodes.append(node_stat[0])
+
+    if len(selected_nodes) > 0:
+        return random.choice(selected_nodes[:len(selected_nodes)/2+1])
+    else:
+        logger.error("no host with available resources found")
+        sys.exit('exiting')
 
 
 def check_proxmox_response(response):
@@ -242,8 +247,13 @@ if __name__ == '__main__':
             newid = options['vmid']
         logger.info('VmNextId: %s found' % newid)
 
-        # get node best matching vm requirements
-        target_node = getAvailableNode(proxmox_api, options['memory'])
+        # select node
+        if 'node' in options and not options['node'] == 'auto':
+            # manual select
+            target_node = options['node']
+        else:
+            # auto select best matching vm requirements
+            target_node = getAvailableNode(proxmox_api, options['memory'])
         logger.info('available node: %s found' % target_node)
         storage = getNFSVolume(proxmox_api, options['name'])
         logger.info('storage: %s found' % storage)

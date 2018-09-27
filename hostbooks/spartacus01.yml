@@ -1,6 +1,7 @@
 ---
 template: masterdebian9
 vmid: 'auto'
+node: 'auto'
 name: spartacus01
 description: spartacus01
 hosts:

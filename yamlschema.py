@@ -97,6 +97,8 @@ class YamlSchema:
                            'default': self.defaults['TEMPLATEID']},
             'name': {'required': True, 'type': 'string'},
             'vmid': {'type': 'vmid', 'default': 'auto'},
+            'node': {'type': 'string', 'default': 'auto',
+                     'allowed': self.resources['NODES']},
             'description': {'type': 'string'},
             'hosts': self.hosts_schema,
             'sockets': {'type': 'string', 'allowed': self.resources['SOCKETS'],

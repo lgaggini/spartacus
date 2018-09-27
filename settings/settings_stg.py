@@ -26,7 +26,9 @@ VM_RESOURCES = {
     'DISKFORMATS': ['raw', 'qcow2'],
     'CORES': ['1', '2', '4', '8', '16'],
     'SOCKETS': ['1', '2', '4', '8', '16'],
-    'FARMS': ['farm1', 'farm2', 'farm3']
+    'FARMS': ['farm1', 'farm2', 'farm3'],
+    'NODES': ['auto', 'kvm41', 'kvm42', 'kvm43', 'kvm44', 'kvm45',
+              'kvm46', 'kvm47', 'kvm48', 'kvm49', 'kvm50']
 }
 
 # kvm resources thresolds
