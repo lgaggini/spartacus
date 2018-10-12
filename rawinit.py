@@ -131,7 +131,7 @@ def generate_ssh_hostkeys(filename):
 def double_check_hostname(ssh, dst, expected):
     """ check if the hostname of the mounted images is consistent """
     command = 'cat %s/etc/hostname' % dst
-    hostname = ssh.remote_command(command)
+    exitcode, hostname = ssh.remote_command(command)
     if hostname.strip() != expected:
         logger.error('the mount image on %s doesnt have the expected hostname'
                      % dst)
