@@ -51,6 +51,20 @@ def settings_load(settings_file):
     return settings
 
 
+def netid_generate(interfaces, template):
+    for i, interface in enumerate(interfaces):
+        logger.debug(interface)
+        if template == 'masterdebian8' or template == 'mastercentos7':
+            interface['id'] = '%s%i' % \
+                              (cfg['VM_DEFAULTS8']['STARTNIC'],
+                               cfg['VM_DEFAULTS8']['STARTNICID']+i)
+        elif template == 'masterdebian9':
+            interface['id'] = '%s%i' % \
+                              (cfg['VM_DEFAULTS']['STARTNIC'],
+                               cfg['VM_DEFAULTS']['STARTNICID']+i)
+        logger.debug(interface['id'])
+
+
 def template_compile(configs):
     """ compile jinja template """
     env = Environment(loader=FileSystemLoader('templates'))
@@ -63,12 +77,30 @@ def template_compile(configs):
                                                            ex.output))
         sys.exit('exiting')
 
+    netid_generate(configs['interfaces'], configs['template'])
+
+    # cross OS family configurations
     for config_key in cfg['TEMPLATE_MAP'].keys():
         j2_template = env.get_template('%s.j2' % config_key)
         with open('%s/%s' % (custom_tmp_fd, config_key), 'w') as config_file:
             if cfg['TEMPLATE_MAP'][config_key] in configs:
                 var = configs[cfg['TEMPLATE_MAP'][config_key]]
                 config_file.write(j2_template.render(var=var))
+
+    # network configuration based on OS family (template name)
+    if 'debian' in configs['template']:
+        j2_debian_network = env.get_template('interfaces.j2')
+        with open('%s/interfaces' % (custom_tmp_fd), 'w') as config_file:
+            var = configs['interfaces']
+            config_file.write(j2_debian_network.render(var=var))
+    elif 'centos' in configs['template']:
+        j2_centos_network = env.get_template('ifcfg-ethX.j2')
+        for interface in configs['interfaces']:
+            with open('%s/ifcfg-%s' % (custom_tmp_fd, interface['id']), 'w') as config_file:
+                config_file.write(j2_centos_network.render(var=interface))
+    else:
+        logger.error('template %s not recognized' % configs['template'])
+        sys.exit('exiting')
 
 
 def nbd_module(ssh):
@@ -161,6 +193,7 @@ def rawinit(settings, configs, src, dst, dev='/dev/nbd0', part='1',
     global cfg
     cfg = settings
     logger.debug(cfg)
+    logger.debug(configs)
 
     # compile template
     template_compile(configs)
@@ -203,8 +236,16 @@ def rawinit(settings, configs, src, dst, dev='/dev/nbd0', part='1',
         with proxmox_sftp_srv as proxmox_sftp:
             logger.debug(proxmox_sftp)
             logger.info('interfaces')
-            proxmox_sftp.deploy('%s/interfaces' % custom_tmp_fd,
-                                '%s/etc/network/interfaces' % dst)
+            # debian
+            if 'debian' in configs['template']:
+                proxmox_sftp.deploy('%s/interfaces' % custom_tmp_fd,
+                                    '%s/etc/network/interfaces' % dst)
+            elif 'centos' in configs['template']:
+                for interface in configs['interfaces']:
+                    netid = interface['id']
+                    if_net_cfg = '%s/etc/sysconfig/network-scripts/ifcfg-%s'
+                    proxmox_sftp.deploy('%s/ifcfg-%s' % (custom_tmp_fd, netid),
+                                        if_net_cfg % (dst, netid))
             logger.info('hostname')
             proxmox_sftp.deploy('%s/hostname' % custom_tmp_fd,
                                 '%s/etc/hostname' % dst)
@@ -224,7 +265,7 @@ def rawinit(settings, configs, src, dst, dev='/dev/nbd0', part='1',
             logger.info('generate and deploy tmp RSA 2048 bit host keys')
             generate_ssh_hostkeys('%s/%s' % (custom_tmp_fd,
                                              cfg['SSH_HOST_KEY']))
-            logger.info('generated tmp RSA 2048 bit host keys for first ssh access')
+            logger.info('generated tmp RSA 2048 bit host keys')
             priv = '%s' % cfg['SSH_HOST_KEY']
             pub = '%s.pub' % cfg['SSH_HOST_KEY']
             proxmox_sftp.deploy('%s/%s' % (custom_tmp_fd, priv),
@@ -251,7 +292,7 @@ def rawinit(settings, configs, src, dst, dev='/dev/nbd0', part='1',
 
 if __name__ == '__main__':
 
-    description = 'rawinit, customize a debian kvm disk image'
+    description = 'rawinit, customize a debian/centos kvm disk image'
     parser = argparse.ArgumentParser(description=description)
 
     parser.add_argument('--settings', default='settings',

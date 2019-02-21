@@ -291,15 +291,6 @@ if __name__ == '__main__':
                                                        interface['vlan'])
                 mod_conf.append(('net%s' % i, net_str))
                 logger.debug(mod_conf)
-                if vm_name == 'masterdebian8':
-                    interface['id'] = '%s%i' % \
-                                      (cfg['VM_DEFAULTS8']['STARTNIC'],
-                                       cfg['VM_DEFAULTS8']['STARTNICID']+i)
-                else:
-                    interface['id'] = '%s%i' % \
-                                      (cfg['VM_DEFAULTS']['STARTNIC'],
-                                       cfg['VM_DEFAULTS']['STARTNICID']+i)
-                logger.debug(interface['id'])
 
         if 'disks' in options:
             for i, disk in enumerate(options['disks']):

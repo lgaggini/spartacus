@@ -1,7 +1,7 @@
 # spartacus
 
 spartacus is a python tool to create a virtual machine on a proxmox cluster cloning an existent kvm virtual machine or
-template and perform a debian starting configuration by rawinit (based on qemu-nbd).
+template and perform a debian/centos starting configuration by rawinit (based on qemu-nbd).
 It extends my old-project [proxmox-init](https://github.com/libersoft/proxmox-init) for my current environment (where cloudinit doesn't work yet).
 It configures:
 
@@ -73,7 +73,7 @@ optional arguments:
 usage: rawinit.py [-h] [--settings SETTINGS] -s SOURCE -t TARGET -i INVENTORY                                                                                                                                      
                   [-r] [-l {debug,info,warning,error,critical}]
 
-rawinit, customize a debian kvm disk image
+rawinit, customize a debian/centos kvm disk image
 
 optional arguments:
   -h, --help            show this help message and exit
