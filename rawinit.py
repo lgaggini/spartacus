@@ -130,6 +130,11 @@ def image_umount(ssh, dev, src, dst):
     ssh.remote_command(command)
     command = 'rmdir %s' % dst
     ssh.remote_command(command)
+    nbd_disconnect(ssh, dev)
+
+
+def nbd_disconnect(ssh, dev):
+    """ disconnect mounted nbd device """
     command = 'sudo qemu-nbd -d %s' % (dev)
     ssh.remote_command(command)
 
@@ -137,6 +142,16 @@ def image_umount(ssh, dev, src, dst):
 def check_mount(ssh, dev, src, dst):
     """ check if the target mount is mounted """
     command = 'mount | grep -q %s' % dst
+    try:
+        ssh.remote_command(command)
+    except SshCommandBlockingException:
+        return False
+    return True
+
+
+def check_nbd(ssh, dev):
+    """ check if qemu-nbd is in use """
+    command = 'mount | grep -q qemu-nbd'
     try:
         ssh.remote_command(command)
     except SshCommandBlockingException:
@@ -218,6 +233,9 @@ def rawinit(settings, configs, src, dst, dev='/dev/nbd0', part='1',
         if check_mount(proxmox_ssh, dev, src, dst):
             logger.info('mountpoint %s busy, unmounting it' % dst)
             image_umount(proxmox_ssh, dev, src, dst)
+        if check_nbd(proxmox_ssh, dev):
+            logger.info('qemu-nbd busy, disconnect it')
+            nbd_disconnect(proxmox_ssh, dev)
         logger.info('mounting %s to %s by %s' % (src, dst, dev))
         image_mount(proxmox_ssh, dev, src, dst, part)
         logger.info('image %s mounted to %s by %sp%s' % (src, dst, dev, part))
