@@ -151,7 +151,7 @@ def check_mount(ssh, dev, src, dst):
 
 def check_nbd(ssh, dev):
     """ check if qemu-nbd is in use """
-    command = 'mount | grep -q qemu-nbd'
+    command = 'pgrep qemu-nbd'
     try:
         ssh.remote_command(command)
     except SshCommandBlockingException:
