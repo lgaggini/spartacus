@@ -177,10 +177,10 @@ if __name__ == '__main__':
     parser.add_argument('-s', '--settings', default='settings',
                         help='custom settings file in settings package')
     parser.add_argument('-i', '--inventory', default=None,
-                        help='Yaml file path to read', required=True)
+                        help='yaml file path to read', required=True)
     parser.add_argument('-n', '--no-rawinit', dest='init',
                         action='store_false',
-                        help='disable the rawinit component (default enabled)')
+                        help='disables rawinit component (default enabled)')
     parser.set_defaults(init=True)
     parser.add_argument('-r', '--readonly', dest='readonly',
                         action='store_true',
@@ -207,7 +207,7 @@ if __name__ == '__main__':
     logger.debug(parsed_options['template'])
     options = parsed_options
     # fix rawinit
-    options['init'] = cli_options.init
+    init = cli_options.init
     # fix puppet
     options['puppet'] = {}
     options['puppet']['puppetmaster'] = options['puppetmaster']
