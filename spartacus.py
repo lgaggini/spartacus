@@ -186,6 +186,10 @@ if __name__ == '__main__':
                         action='store_true',
                         help='readonly mode for debug (default disabled)')
     parser.set_defaults(readonly=False)
+    parser.add_argument('-p', '--paused', dest='paused',
+                        action='store_true',
+                        help='disables vm boot when ready (default enabled)')
+    parser.set_defaults(paused=False)
     parser.add_argument('-l', '--log-level', default=LOG_LEVELS[1],
                         help='log level (default info)', choices=LOG_LEVELS)
 
@@ -215,6 +219,8 @@ if __name__ == '__main__':
     # fix readonly
     options['readonly'] = cli_options.readonly
     readonly = options['readonly']
+    # fix paused
+    paused = cli_options.paused
     logger.debug(options)
 
     # authentication on proxmox
@@ -317,16 +323,16 @@ if __name__ == '__main__':
         logger.debug(proxmox_api.getVirtualConfig(target_node, newid))
 
         # customize new vm os settings by rawinit
-        if options['init']:
+        if init:
             rawinit.rawinit(cfg, options, src, dst, readonly=readonly,
                             log_level=cli_options.log_level)
 
-        # finally start the new vm
-        if not readonly:
+        # finally start the new vm if desired
+        if not readonly and not paused:
             check_proxmox_response(proxmox_api.startVirtualMachine(
                                    target_node, newid))
-        logger.info('starting the vm %s (id %s) on node %s' %
-                    (name, newid, target_node))
+            logger.info('starting the vm %s (id %s) on node %s' %
+                        (name, newid, target_node))
     else:
         logger.error('unable to found template %s' % (vm_name))
         sys.exit(2)
