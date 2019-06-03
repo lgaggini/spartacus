@@ -158,6 +158,14 @@ def getAvailableNode(connessione, memory):
         sys.exit('exiting')
 
 
+def get_proxmox_version(connessione):
+    version = check_proxmox_response(connessione.connect('get',
+                                                         'version',
+                                                         None))
+    logger.debug(version)
+    return float(version['data']['version'])
+
+
 def check_proxmox_response(response):
     status_code = response['status']['code']
     if status_code != 200:
@@ -228,6 +236,8 @@ if __name__ == '__main__':
     auth = prox_auth(cfg['PROXMOX']['HOST'], cfg['PROXMOX']['USER'],
                      cfg['PROXMOX']['PASSWORD'])
     proxmox_api = pyproxmox(auth)
+
+    logger.debug('Proxmox version: %s' % get_proxmox_version(proxmox_api))
 
     # looking for template / src vm to clone
     vm_name = options['template']
@@ -314,7 +324,10 @@ if __name__ == '__main__':
                                    (target_node, newid, mod_conf))
         logger.info('options settings')
 
-        newimage = 'vm-%s-disk-1.raw' % newid
+        if get_proxmox_version(proxmox_api) >= 5.4:
+            newimage = 'vm-%s-disk-0.raw' % newid
+        else:
+            newimage = 'vm-%s-disk-1.raw' % newid
         src = '%s/%s/images/%s/%s' % (cfg['IMAGES_BASEPATH'], storage, newid,
                                       newimage)
         logger.debug(src)
