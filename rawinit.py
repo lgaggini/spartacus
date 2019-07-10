@@ -54,11 +54,13 @@ def settings_load(settings_file):
 def netid_generate(interfaces, template):
     for i, interface in enumerate(interfaces):
         logger.debug(interface)
+        # classic interface naming (ethX)
         if template == 'masterdebian8' or template == 'mastercentos7':
             interface['id'] = '%s%i' % \
                               (cfg['VM_DEFAULTS8']['STARTNIC'],
                                cfg['VM_DEFAULTS8']['STARTNICID']+i)
-        elif template == 'masterdebian9':
+        # new systemd predictable interface naming
+        else:
             interface['id'] = '%s%i' % \
                               (cfg['VM_DEFAULTS']['STARTNIC'],
                                cfg['VM_DEFAULTS']['STARTNICID']+i)
