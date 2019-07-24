@@ -104,8 +104,11 @@ def getNFSVolume(connessione, name):
                      (','.join(volumes)))
         sys.exit('exiting')
     else:
-        return sorted(selected_volumes.items(),
-                      key=operator.itemgetter(1))[0][0]
+        sorted_volumes = sorted(selected_volumes.items(),
+                                key=operator.itemgetter(1),
+                                reverse=True)
+        logger.debug(sorted_volumes)
+        return sorted_volumes[0][0]
 
 
 def findTemplate(connessione, vmname):
