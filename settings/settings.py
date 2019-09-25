@@ -43,31 +43,44 @@ KVM_THRES = {
 VM_DEFAULTS = {
     'ODD_VOL': ['vol01', 'vol03'],
     'EVEN_VOL': ['vol02', 'vol04'],
-    'TEMPLATE': 'masterdebian9',
-    'TEMPLATEID': '694',
-    'TEMPLATENODE': 'kvm',
     'CORES': '2',
     'SOCKETS': '2',
     'RAM': '4096',
-    'FARM': 'farm1',
+    'FARM': 'InetRegister',
     'ENV': 'base',
-    'STARTNIC': 'ens',
-    'STARTNICID': 18
+    'TEMPLATE': 'masterdebian9'
 }
-# vm defaults
-VM_DEFAULTS8 = {
-    'ODD_VOL': ['vol01', 'vol03'],
-    'EVEN_VOL': ['vol02', 'vol04'],
-    'TEMPLATE': 'masterdebian8',
-    'TEMPLATEID': '400',
-    'TEMPLATENODE': 'kvm',
-    'CORES': '2',
-    'SOCKETS': '2',
-    'RAM': '4096',
-    'FARM': 'farm1',
-    'ENV': 'base',
-    'STARTNIC': 'eth',
-    'STARTNICID': 0
+
+# os defaults
+OS_DEFAULTS = {
+    'masterdebian9': {
+        'TEMPLATEID': '973',
+        'TEMPLATENODE': 'kvm1',
+        'STARTNIC': 'ens',
+        'STARTNICID': 18
+    },
+    'masterdebian8': {
+        'TEMPLATEID': '400',
+        'TEMPLATENODE': 'kvm1',
+        'STARTNIC': 'eth',
+        'STARTNICID': 0
+    },
+    'masterdebian10': {
+        'TEMPLATEID': '287',
+        'TEMPLATENODE': 'kvm1',
+        'STARTNIC': 'ens',
+        'STARTNICID': 18
+    },
+    'mastercentos7': {
+        'TEMPLATEID': '1085',
+        'TEMPLATENODE': 'kvm2',
+        'STARTNIC': 'eth',
+        'STARTNICID': 0
+    },
+    'default': {
+        'STARTNIC': 'ens',
+        'STARTNICID': 18
+    }
 }
 
 # proxmox settings
@@ -81,7 +94,6 @@ PROXMOX = {
 # templating settings
 TEMPLATE_MAP = {
     'hostname': 'name',
-    'interfaces': 'interfaces',
     'hosts': 'hosts',
     'puppet.conf': 'puppet',
     'pu_puppetenvironment': 'env',

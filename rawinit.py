@@ -15,7 +15,7 @@ from pysshops import SshOps, SftpOps, SshCommandBlockingException
 
 
 SETTINGS_KEY = ['PROXMOX', 'SSH_HOST_KEY', 'DEV', 'TMP_DIR', 'STATIC_DIR',
-                'VM_RESOURCES', 'VM_DEFAULTS', 'VM_DEFAULTS8', 'KVM_THRES',
+                'VM_RESOURCES', 'VM_DEFAULTS', 'OS_DEFAULTS', 'KVM_THRES',
                 'IMAGES_BASEPATH', 'TEMPLATE_MAP', 'WORKING_MNT']
 LOG_LEVELS = ['debug', 'info', 'warning', 'error', 'critical']
 
@@ -54,16 +54,16 @@ def settings_load(settings_file):
 def netid_generate(interfaces, template):
     for i, interface in enumerate(interfaces):
         logger.debug(interface)
-        # classic interface naming (ethX)
-        if template == 'masterdebian8' or template == 'mastercentos7':
+        # custom interface naming by settings
+        if template in cfg['OS_DEFAULTS']:
             interface['id'] = '%s%i' % \
-                              (cfg['VM_DEFAULTS8']['STARTNIC'],
-                               cfg['VM_DEFAULTS8']['STARTNICID']+i)
-        # new systemd predictable interface naming
+                              (cfg['OS_DEFAULTS'][template]['STARTNIC'],
+                               cfg['OS_DEFAULTS'][template]['STARTNICID']+i)
+        # fallback to new systemd predictable interface naming
         else:
             interface['id'] = '%s%i' % \
-                              (cfg['VM_DEFAULTS']['STARTNIC'],
-                               cfg['VM_DEFAULTS']['STARTNICID']+i)
+                              (cfg['OS_DEFAULTS']['default']['STARTNIC'],
+                               cfg['OS_DEFAULTS']['default']['STARTNICID']+i)
         logger.debug(interface['id'])
 
 

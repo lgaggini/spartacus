@@ -15,7 +15,7 @@ import importlib
 import os
 
 SETTINGS_KEY = ['PROXMOX', 'SSH_HOST_KEY', 'DEV', 'TMP_DIR', 'STATIC_DIR',
-                'VM_RESOURCES', 'VM_DEFAULTS', 'VM_DEFAULTS8', 'KVM_THRES',
+                'VM_RESOURCES', 'VM_DEFAULTS', 'OS_DEFAULTS', 'KVM_THRES',
                 'IMAGES_BASEPATH', 'TEMPLATE_MAP', 'WORKING_MNT']
 LOG_LEVELS = ['debug', 'info', 'warning', 'error', 'critical']
 
@@ -247,12 +247,11 @@ if __name__ == '__main__':
     name = options['name']
     description = options['description']
     logger.info('looking for the template %s' % vm_name)
-    if options['templateid'] is None or\
-       options['template'] != cfg['VM_DEFAULTS']['TEMPLATE']:
+    if vm_name not in cfg['OS_DEFAULTS']:
         tid, node = findTemplate(proxmox_api, vm_name)
     else:
-        tid = options['templateid']
-        node = cfg['VM_DEFAULTS']['TEMPLATENODE']
+        tid = cfg['OS_DEFAULTS'][vm_name]['TEMPLATEID']
+        node = cfg['OS_DEFAULTS'][vm_name]['TEMPLATENODE']
     logger.info('template %s, tid %s found'
                 % (options['template'], tid))
 

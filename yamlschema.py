@@ -93,8 +93,6 @@ class YamlSchema:
         self.vm_schema = {
             'template': {'type': 'string',
                          'default': self.defaults['TEMPLATE']},
-            'templateid': {'type': 'string',
-                           'default': self.defaults['TEMPLATEID']},
             'name': {'required': True, 'type': 'string'},
             'vmid': {'type': 'vmid', 'default': 'auto'},
             'node': {'type': 'string', 'default': 'auto',

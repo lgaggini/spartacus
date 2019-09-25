@@ -162,7 +162,6 @@ disks_schema = {
 
 vm_schema = {
     'template': {'type': 'string', 'default': VM_DEFAULTS['TEMPLATE']},
-    'templateid': {'type': 'string', 'default': VM_DEFAULTS['TEMPLATEID']},
     'name': {'required': True, 'type': 'string'},
     'vmid': {'type': 'string', 'default': 'auto'},
     'node': {'type': 'string', 'default': 'auto',
@@ -206,10 +205,10 @@ interfaces:
       ipaddress: 172.20.16.110
       netmask: 255.255.248.0
       gateway: 172.20.16.1
-farm: farm1
 disks:
     - size: '1'
       format: 'raw'
+farm: farm1
 env: base
 puppetmaster: puppetmaster.domain
 ```
