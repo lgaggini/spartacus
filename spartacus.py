@@ -27,7 +27,7 @@ def log_init(loglevel):
     FORMAT = '%(asctime)s %(levelname)s %(module)s %(message)s'
     logging.basicConfig(format=FORMAT, level=getattr(logging,
                                                      loglevel.upper()))
-    coloredlogs.install(level=loglevel.upper())
+    coloredlogs.install(level=loglevel.upper(), stream=sys.stdout)
 
 
 def settings_load(settings_file):
