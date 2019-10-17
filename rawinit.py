@@ -119,8 +119,11 @@ def image_mount(ssh, dev, src, dst, part):
     ssh.remote_command(command)
     command = 'mkdir -p %s' % dst
     ssh.remote_command(command)
+    command = 'kpartx -a %s' % dev
+    ssh.remote_command(command)
     src_nbd = '%sp%s' % (dev, part)
-    command = 'sudo mount %s %s' % (src_nbd, dst)
+    src_mapper_nbd = src_nbd.replace('/dev/', '/dev/mapper/')
+    command = 'sudo mount %s %s' % (src_mapper_nbd, dst)
     ssh.remote_command(command)
 
 
