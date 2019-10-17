@@ -218,7 +218,7 @@ def rawinit(settings, configs, src, dst, dev='/dev/nbd0', part='1',
     # exit if it's a readonly run
     if readonly:
         logger.info('running in readonly mode, templates compiled')
-        sys.exit('exiting')
+        sys.exit(0)
 
     # proxmox ssh connection
     proxmox_srv = SshOps(cfg['PROXMOX']['SSH_HOST'],
