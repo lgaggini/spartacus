@@ -13,7 +13,7 @@ ipaddress==1.0.19
 Jinja2==2.11.3
 MarkupSafe==1.0
 monotonic==1.4
-paramiko==2.4.2
+paramiko==2.10.1
 pathspec==0.5.5
 pyasn1==0.4.2
 pycparser==2.18
